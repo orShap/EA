@@ -16,7 +16,7 @@ firebase.initializeApp({
     storageBucket: "shapira-pro.appspot.com",
     messagingSenderId: "813284272810"
 });
-
+ 
 var port = process.env.PORT || 8080; 
 var database = firebase.database();
 var cachedSharesData;
