@@ -44,58 +44,51 @@ app.listen(port, function () {
 //}
 //
 
-app.post('/getSymbolsByDate', async ((request, res) => {
+var getSymbolsByDate =  async(function(date) {
 
-    try {
-        var { date } = request.body;
+    var ET = utils.dateToCheck(date);
+    var updates = {};
+    var paramsValues = [];
+    for(var key in utils.params) paramsValues.push(utils.params[key]);       
+    var paramsPath = paramsValues.join('/');
+    var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
 
-        var ET = utils.dateToCheck(date);
-        var updates = {};
-        var paramsValues = [];
-        for(var key in utils.params) paramsValues.push(utils.params[key]);       
-        var paramsPath = paramsValues.join('/');
-        var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
+    // Not a valid time
+    if (!ET.validTimeCheck) {
+        var now = moment.tz('America/New_York');
+        var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm') };
 
-        // Not a valid time
-        if (!ET.validTimeCheck) {
-            var now = moment.tz('America/New_York');
-            var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm') };
+        // Update DB only before decisions time 
+        if ((now.hour() < utils.decisionsTime.hour) || 
+            (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
+            updates[dbPath] = notActionTime;
+            database.ref().update(updates);
+        }
 
-            // Update DB only before decisions time 
-            if ((now.hour() < utils.decisionsTime.hour) || 
-                (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
-                updates[dbPath] = notActionTime;
-                database.ref().update(updates);
-            }
-            res.send(notActionTime);  
+        return (notActionTime);  
+    }
+    else {
+
+        var arrEarningAnnouncements = [];
+
+        // if there are values in db return them! 
+        var snapshot = await (database.ref(dbPath).once('value'));
+        if (snapshot.exists()) { 
+            arrEarningAnnouncements = snapshot.val();
         }
         else {
 
-            var arrEarningAnnouncements = [];
-
-            // if there are values in db return them! 
-            var snapshot = await (database.ref(dbPath).once('value'));
-            if (snapshot.exists()) { 
-                arrEarningAnnouncements = snapshot.val();
-            }
-            else {
-
-                arrEarningAnnouncements = await (getEarningsCalendar(ET.wantedTimeET));
-                arrEarningAnnouncements = await (addDataLayer(arrEarningAnnouncements, utils.params.windowSize, ET.wantedTimeET));
-                arrEarningAnnouncements = utilsStrategy.minimizeSharesList(arrEarningAnnouncements, utils.params);
-                arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
-                updates[dbPath] = arrEarningAnnouncements;
-                database.ref().update(updates);
-            }
-
-            res.send(arrEarningAnnouncements);
+            arrEarningAnnouncements = await (getEarningsCalendar(ET.wantedTimeET));
+            arrEarningAnnouncements = await (addDataLayer(arrEarningAnnouncements, utils.params.windowSize, ET.wantedTimeET));
+            arrEarningAnnouncements = utilsStrategy.minimizeSharesList(arrEarningAnnouncements, utils.params);
+            arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
+            updates[dbPath] = arrEarningAnnouncements;
+            database.ref().update(updates);
         }
+
+        return (arrEarningAnnouncements);
     }
-    catch (err) {
-        console.log(err);
-        res.sendStatus(400);
-    }
-}));
+});
 
 var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDate) {
 
@@ -258,4 +251,24 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
     return arrToReturn;
 })
 
-//getShareData("goog", 30, utils.clearFormatedTZDate(moment.tz('America/New_York')));
+
+
+app.get('/', async ((req, res) => {
+    try {
+        res.send(await (getSymbolsByDate()));
+    }
+    catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
+}));
+app.post('/getSymbolsByDate', async ((req, res) => {
+    var { date } = req.body;
+    try {
+        res.send(await (getSymbolsByDate(date)));
+    }
+    catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
+}));
