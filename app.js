@@ -1,3 +1,4 @@
+var express = require('express');
 var app = express();
 var firebase = require("firebase");
 var moment = require("moment-timezone");
@@ -30,7 +31,9 @@ app.listen(port, function () {
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-// // firebase deploy --only functions
+// // git push heroku master
+// // heroku logs -t
+//
 //
 // firebase ruls
 // {

@@ -12,6 +12,7 @@
     "asyncawait": "^1.0.6",
     "body-parser": "^1.15.0",
     "express": "^4.14.0",
+    "fibers": "^2.0.0",
     "firebase": "~4.10.1",
     "firebase-admin": "~5.8.1",
     "firebase-functions": "^0.8.1",
