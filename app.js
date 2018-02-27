@@ -1,10 +1,11 @@
-const functions = require('firebase-functions');
+var app = express();
 var firebase = require("firebase");
 var moment = require("moment-timezone");
 var rp = require('request-promise');
 var utils = require('./utils');
 var utilsWeb = require('./utilsWeb');
 var utilsStrategy = require('./utilsStrategy');
+var bodyParser = require('body-parser');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 firebase.initializeApp({
@@ -16,9 +17,15 @@ firebase.initializeApp({
     messagingSenderId: "813284272810"
 });
 
+var port = process.env.PORT || 8080; 
 var database = firebase.database();
 var cachedSharesData;
 var cachedEarningsCalendar;
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+app.listen(port, function () {
+  console.log('listening on port ' + port + '!');
+});
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -34,7 +41,7 @@ var cachedEarningsCalendar;
 //}
 //
 
-exports.getSymbolsByDate = functions.https.onRequest(async ((request, res) => {
+app.post('/getSymbolsByDate', async ((request, res) => {
 
     var { date } = request.body;
 
