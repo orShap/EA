@@ -9,6 +9,11 @@ var utilsStrategy = require('./utilsStrategy');
 var bodyParser = require('body-parser');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
+var logger = require('logzio-nodejs').createLogger({
+    token: 'ROwipFGjEqNIgCGxbmPxbdYAbsAWRXbi',
+    host: 'listener.logz.io',
+    type: 'YourLogType'     // OPTIONAL (If none is set, it will be 'nodejs')
+});
 firebase.initializeApp({
     apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
     authDomain: "shapira-pro.firebaseapp.com",

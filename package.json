@@ -15,6 +15,7 @@
     "firebase": "~4.10.1",
     "firebase-admin": "~5.8.1",
     "firebase-functions": "^0.8.1",
+    "logzio-nodejs": "^0.4.10",
     "moment-timezone": "^0.5.14",
     "request": "^2.83.0",
     "request-promise": "^4.2.2"
