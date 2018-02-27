@@ -20,8 +20,10 @@ module.exports = {
         var minimizedFinalArray = [];
         
         arrEarningAnnouncements.forEach(share => {
-            if (share.data[0].volume >= params.minimumVolume) 
+            if (share.data && share.data[0] && share.data[0].volume && share.data[0].volume >= params.minimumVolume) 
                 minimizedVolumeArray.push(share);
+            else if (!share.data || !share.data[0] || !share.data[0].volume)
+                console.log("somthing wrong with shares data - " + share.symbol)
         });
 
         minimizedFinalArray = this.minimizePriceWindowAndQuantiles(

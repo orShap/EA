@@ -8,6 +8,9 @@ module.exports = {
     
     getYahooShareDataBeforeWantedDate : async (function (symbol, nNumOfDays, wantedDate) {
         
+        if (symbol == "RDS.A")
+        var a=3;
+
         const url = "https://finance.yahoo.com/quote/" + symbol + "/history?"
         var arrToReturn = [];
         var numOfTrys = 0;
