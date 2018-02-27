@@ -1,6 +1,10 @@
 var moment = require("moment-timezone");
 var rp = require('request-promise');
-
+var logger = require('logzio-nodejs').createLogger({
+    token: 'ROwipFGjEqNIgCGxbmPxbdYAbsAWRXbi',
+    host: 'listener.logz.io',
+    type: 'YourLogType'     // OPTIONAL (If none is set, it will be 'nodejs')
+});
 
 module.exports = {
     
@@ -47,6 +51,35 @@ module.exports = {
 
         var format = tzDate.format();
         return (format.substring(0,11) + "00:00:00" + format.substring(19))
-    }
+    },
+
+    writeLog : function(level, message, extraInfo) {
+  
+        try {
+      
+          var env = process.env.ENV || 'Test';
+          if (level != 'error' && level != 'info' && level != 'debug')
+            level = 'error';
+      
+          var error
+          if (extraInfo) {
+            error = extraInfo.error;
+            delete extraInfo.error;
+          }
+      
+          var obj = { 
+            env,
+            level,
+            message,
+            error : error,
+            extraInfo : extraInfo
+          };
+      
+          console.log(env + " " + level + ": " + message + (error ? ("\n" + error) : ""))
+          logger.log(obj);
+        } catch (err) {
+          console.error(err);
+        }
+      }
 }
 
