@@ -253,7 +253,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 
-app.get('/', async ((req, res) => {
+app.get('/getSymbolsByDate', async ((req, res) => {
     try {
         res.send(await (getSymbolsByDate()));
     }
