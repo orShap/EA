@@ -75,7 +75,7 @@ var getSymbolsByDate =  async(function(date) {
         var snapshot = await (database.ref(dbPath).once('value'));
         var earnings = snapshot.val();
 
-        if (!earnings.message)
+        if (earnings && !earnings.message)
             arrEarningAnnouncements = earnings;
         else {
             arrEarningAnnouncements = await (getEarningsCalendar(ET.wantedTimeET));
