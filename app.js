@@ -92,20 +92,18 @@ var getSymbolsByDate =  async(function(date) {
 
 var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDate) {
 
-    console.log("AddInfoLayer to all symbols");
     await (Promise.all(arrEarningAnnouncements.map(async ((element) => {
 
         try {
             var data = await (getShareDataBeforeWantedDate(element.symbol, nNumOfDays, wantedDate.substring(0,10)));
             element.data = data;
-            console.log("...Add data to " + element.symbol);
         }
         catch (err) {
             console.log(err);
         }
             
     }))));
-    console.log("AddInfoLayer was finished!");
+    
     return arrEarningAnnouncements;
 });
 
@@ -120,17 +118,15 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
     
     if (cachedSharesData) {
         shareData = cachedSharesData[symbol];
-        console.log("Took sharesData from cache!...");
     }
     if (shareData) {
-        console.log("Had symbol data!");
+        console.log("Had " + symbol + " in Cashe!");
     }
     else {
         var snapshot = await (database.ref(dbPath).once('value'));
         shareData = snapshot.val();
         cachedSharesData = {};
         cachedSharesData[symbol] = shareData;
-        console.log("Didn't have symbol data in cache... try to take it from DB");
     }
 
     // If data exists
@@ -156,7 +152,7 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
     // If there is no need to retrive the data from the web
     if (!retriveDataFromWeb) {
         arrToReturn = shareData.slice(index, index + nNumOfDays );
-        console.log("Had wanted dates!");
+        console.log("Had " + symbol + " relevant dates in DB!");
     }
     else {
         var arrNewData = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, nNumOfDays, wantedDate)); 
@@ -185,7 +181,7 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
         var updates = {};
         updates[dbPath] = arrToReturn;
         database.ref().update(updates);
-        console.log("Didn't have wanted dates... took it from WEB");
+        console.log("Took " + symbol + " from YAHOO-FINANCE-WEB and save it to DB!");
     }
 
     return arrToReturn;
@@ -204,20 +200,18 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
         snapshot = await (database.ref(dbPath).once('value'));
         if (snapshot.exists()) {
             currEarningsCalendar = snapshot.val();
-            console.log("Took " + formatedWandedDate + " calendar from Cache...");
+            console.log("Try take relevant EA-Calendar data form DB");
         }
     }
     else {
         if (!cachedEarningsCalendar) {
             snapshot = await (database.ref('/eaCalendar/').once('value'));
             cachedEarningsCalendar = snapshot.val();
-            console.log("Read all " + formatedWandedDate + " calendar from DB to Cache!...");
+            console.log("Take all EA-Calendar data for BATCH-REQUEST!");
         }
 
-        if (cachedEarningsCalendar) {
+        if (cachedEarningsCalendar) 
             currEarningsCalendar = cachedEarningsCalendar[formatedWandedDate];
-            console.log("Took " + formatedWandedDate + " calendar from Cache...");
-        }
     }
 
     // Check if exists in db
@@ -226,7 +220,6 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
     }
     else {
 
-        console.log("Didnt find " + formatedWandedDate + " calendar... Take calendar from WEB...");
         var sameDay = moment.tz(formatedWandedDate, "America/New_York");
         var dayBefore = moment.tz(sameDay - (86400000), "America/New_York");
         if (sameDay.day() == 0)
@@ -246,6 +239,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
         var updates = {};
         updates[dbPath] = arrToReturn;
         database.ref().update(updates);
+        console.log("Took rlevant calendat from ZACKS-WEB and save it to DB!");
     }
 
     return arrToReturn;
