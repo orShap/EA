@@ -102,7 +102,7 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
         catch (err) {
             var strErr = String(err);
             if (err.indexOf("Our engineers") != -1) 
-                console.log("We've been blocked!, they thing we did D-DOS")
+                console.log("We've been blocked!, they thing we did D-DOS-!-!-!-!-!-!-!-!-!-!-!-!")
             else
                 console.log(err);
         }
@@ -246,7 +246,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
         var updates = {};
         updates[dbPath] = arrToReturn;
         database.ref().update(updates);
-        console.log("Took rlevant calendat from ZACKS-WEB and save it to DB!");
+        console.log("Took rlevant calendar from ZACKS-WEB and save it to DB!");
     }
 
     return arrToReturn;
