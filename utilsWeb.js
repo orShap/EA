@@ -99,7 +99,11 @@ module.exports = {
                 }
             }
             catch (err) {
-                console.log(err);
+                var strErr = String(err);
+                if (err.indexOf("Our engineers") != -1) 
+                    console.log("We've been blocked!, they thing we did D-DOS")
+                else
+                    console.log(err);
             }
 
             numOfTrys++;
