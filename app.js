@@ -73,11 +73,11 @@ var getSymbolsByDate =  async(function(date) {
 
         // if there are values in db return them! 
         var snapshot = await (database.ref(dbPath).once('value'));
-        if (snapshot.exists()) { 
-            arrEarningAnnouncements = snapshot.val();
-        }
-        else {
+        var earnings = snapshot.val();
 
+        if (!earnings.message)
+            arrEarningAnnouncements = earnings;
+        else {
             arrEarningAnnouncements = await (getEarningsCalendar(ET.wantedTimeET));
             arrEarningAnnouncements = await (addDataLayer(arrEarningAnnouncements, utils.params.windowSize, ET.wantedTimeET));
             arrEarningAnnouncements = utilsStrategy.minimizeSharesList(arrEarningAnnouncements, utils.params);
