@@ -92,20 +92,24 @@ var getSymbolsByDate =  async(function(date) {
 
 var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDate) {
 
-    arrEarningAnnouncements.forEach(element => {
-    //await (Promise.all(arrEarningAnnouncements.map(async ((element) => {
+    //arrEarningAnnouncements.forEach(element => {
+    await (Promise.all(arrEarningAnnouncements.map(async ((element) => {
 
         try {
             var data = await (getShareDataBeforeWantedDate(element.symbol, nNumOfDays, wantedDate.substring(0,10)));
             element.data = data;
         }
         catch (err) {
-            console.log(err);
+            var strErr = String(err);
+            if (err.indexOf("Our engineers") != -1) 
+                console.log("We've been blocked!, they thing we did D-DOS")
+            else
+                console.log(err);
         }
             
     })
 
-    //)));
+    )));
 
     return arrEarningAnnouncements;
 });
