@@ -90,7 +90,7 @@ module.exports = {
                 (curr.windowReturn == 1) ||
                 ((bWitQuantilesCheck) && (curr.quantile != 0) && (curr.quantile != countOfQuantiles - 1)) ||
                 ((bWithWindowReturnsCheck) && (curr.windowReturn < 1 + upperThanReturn) && (curr.windowReturn > 1 - upperThanReturn))) {
-                console.log(curr.symbol + " minimized with volume: " + curr.data[0].volume + " windowReturn: " + curr.windowReturn + " quantile: " + curr.quantile + " lastPrice: " + curr.data[0].close);
+                var n = 5;
             }
             else {
                 minimizedFinalArray.push(curr);
