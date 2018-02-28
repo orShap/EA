@@ -230,9 +230,9 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
         var sameDay = moment.tz(formatedWandedDate, "America/New_York");
         var dayBefore = moment.tz(sameDay - (86400000), "America/New_York");
         if (sameDay.day() == 0)
-            dayBefore = moment.tz(moment(sameDay) + (86400000), "America/New_York");
+            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
         if (sameDay.day() == 6)
-            dayBefore = moment.tz(moment(sameDay) + (86400000), "America/New_York");
+            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
         if (dayBefore.day() == 0)
             dayBefore = moment.tz(moment(dayBefore) - (86400000), "America/New_York");
         if (dayBefore.day() == 6)

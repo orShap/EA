@@ -39,7 +39,7 @@ module.exports = {
                 (timeCheckET.minute() < this.decisionsTime.minute))
                 validTimeCheck = false;
 
-            wantedTimeET = this.clearFormatedTZDate(moment.tz(moment(timeCheckET).milliseconds() + (86400000), "America/New_York"));
+            wantedTimeET = this.clearFormatedTZDate(moment.tz(moment(timeCheckET) + (86400000), "America/New_York"));
         }
         
         return ({ wantedTimeET, validTimeCheck });
