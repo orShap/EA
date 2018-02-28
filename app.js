@@ -86,6 +86,7 @@ var getSymbolsByDate =  async(function(date) {
             database.ref().update(updates);
         }
 
+        arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
         return (arrEarningAnnouncements);
     }
 });
@@ -101,7 +102,7 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
         }
         catch (err) {
             var strErr = String(err);
-            if (err.indexOf("Our engineers") != -1) 
+            if (strErr.indexOf("Our engineers") != -1) 
                 console.log("We've been blocked!, they thing we did D-DOS-!-!-!-!-!-!-!-!-!-!-!-!")
             else
                 console.log(err);
