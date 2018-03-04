@@ -82,11 +82,11 @@ var getSymbolsByDate =  async(function(date) {
             arrEarningAnnouncements = await (addDataLayer(arrEarningAnnouncements, utils.params.windowSize, ET.wantedTimeET));
             arrEarningAnnouncements = utilsStrategy.minimizeSharesList(arrEarningAnnouncements, utils.params);
             arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
+            arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
             updates[dbPath] = arrEarningAnnouncements;
             database.ref().update(updates);
         }
 
-        arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
         return (arrEarningAnnouncements);
     }
 });

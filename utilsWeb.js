@@ -89,8 +89,10 @@ module.exports = {
                                     });
                             }
                             catch (err) {
-                                if (dayRows[nIndex + nDayIndex].startsWith("DIVIDEND") == -1)
+                                if (dayRows[nIndex + nDayIndex].indexOf("DIVIDEND") == -1)
                                     console.log(err);
+                                else
+                                    nNumOfDays++;
                             }
                         }
 
