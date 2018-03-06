@@ -6,7 +6,7 @@ const await = require('asyncawait/await');
 
 module.exports = {
     
-    getYahooShareDataBeforeWantedDate : async (function (symbol, nNumOfDays, wantedDate) {
+    getYahooShareDataBeforeWantedDate : async (function(symbol, nNumOfDays, wantedDate, firstDayLessThan, firstDayGreaterOrEqual) {
         
         if (symbol == "RDS.A")
         var a=3;
@@ -53,17 +53,21 @@ module.exports = {
 
                     if (currDate < wantedDate) {
 
-                        for (var nIndex = 0; (nIndex < nNumOfDays) && (nIndex + nDayIndex < dayRows.length - 1); nIndex++) {
+                        for (let nOffsetIndex = 0; 
+                            ((firstDayLessThan) && (nOffsetIndex < nNumOfDays) && (nOffsetIndex + nDayIndex < dayRows.length - 1)) || 
+                            ((firstDayGreaterOrEqual) && (nOffsetIndex <= nDayIndex) && (nDayIndex - nOffsetIndex >= 0)); 
+                            nOffsetIndex++) {
 
                             try {
 
-                                arrValues       = dayRows[nIndex + nDayIndex].substring(1).split(',');
-                                var lcurrDate   = parseInt(arrValues[0].substring(a.length));
-                                var dOpen       = parseFloat(arrValues[1].substring(b.length));
-                                var dHigh       = parseFloat(arrValues[2].substring(e.length));
-                                var dLow        = parseFloat(arrValues[3].substring(f.length));
-                                var dClose      = parseFloat(arrValues[4].substring(c.length));
-                                var lVolume     = parseInt(arrValues[5].substring(d.length));
+                                let offsetDir   = firstDayGreaterOrEqual ? -1 : 1;
+                                arrValues       = dayRows[nDayIndex + (nOffsetIndex * offsetDir)].substring(1).split(',');
+                                let lcurrDate   = parseInt(arrValues[0].substring(a.length));
+                                let dOpen       = parseFloat(arrValues[1].substring(b.length));
+                                let dHigh       = parseFloat(arrValues[2].substring(e.length));
+                                let dLow        = parseFloat(arrValues[3].substring(f.length));
+                                let dClose      = parseFloat(arrValues[4].substring(c.length));
+                                let lVolume     = parseInt(arrValues[5].substring(d.length));
                                 currDate        = utils.clearFormatedTZDate(moment.tz(moment(startDate).milliseconds() + (lcurrDate * 1000), "America/New_York")).substring(0,10); 
                                 let selectedPlus = null;
 
@@ -89,7 +93,7 @@ module.exports = {
                                     });
                             }
                             catch (err) {
-                                if (dayRows[nIndex + nDayIndex].indexOf("DIVIDEND") == -1)
+                                if (dayRows[nOffsetIndex + nDayIndex].indexOf("DIVIDEND") == -1)
                                     console.log(err);
                                 else
                                     nNumOfDays++;
@@ -118,7 +122,10 @@ module.exports = {
 
     getZacksEarningsCalendar : async (function(selectedDate, indicator, arrToReturn) {
 
-        var startDate   = moment.tz("1970-01-01", "America/New_York");
+        var containsSymbolsMap = {};
+        arrToReturn.forEach(element => containsSymbolsMap[element.symbol] = 1);
+        var startDate = moment.tz("1970-01-01", "America/New_York");
+
         try {
 
             var longDate = ((moment.tz(selectedDate, "America/New_York")) - startDate) / 1000 + 22000;
@@ -154,9 +161,11 @@ module.exports = {
                             estimate = -999;
                     }
 
-                    if ((nOffset == 1 && indicator == "amc") ||
-                        (nOffset == 0 && indicator == "bmo"))
-                        arrToReturn.push({symbol, estimate});
+                    if (!containsSymbolsMap[symbol]) {
+                        if ((nOffset == 1 && indicator == "amc") ||
+                            (nOffset == 0 && indicator == "bmo"))
+                            arrToReturn.push({symbol, estimate});
+                    }
                 }
             });
         }

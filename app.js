@@ -44,7 +44,19 @@ app.listen(port, function () {
 //}
 //
 
-var getSymbolsByDate =  async(function(date) {
+var getPositionReturns = async(function(symbol, date) {
+    var wantedDate = this.clearFormatedTZDate(moment.tz(date, "America/New_York")).substring(0,10);
+    var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, dayAfterWantedDate, true, false));
+    var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, dayAfterWantedDate, false, true));
+
+    if (dataStart.length == 1 && dataEnd.length == 1) {
+        return dataEnd[0].close / dataStart[0].close;
+    }
+
+    return 1;
+});
+
+var predictInvestmentsByDate = async(function(date) {
 
     var ET = utils.dateToCheck(date);
     var updates = {};
@@ -163,7 +175,7 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
         console.log("Had " + symbol + " relevant dates in DB!");
     }
     else {
-        var arrNewData = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, nNumOfDays, wantedDate)); 
+        var arrNewData = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, nNumOfDays, wantedDate, true, false)); 
 
         // Add the new data
         arrNewData.forEach(element => {
@@ -230,9 +242,9 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
         var sameDay = moment.tz(formatedWandedDate, "America/New_York");
         var dayBefore = moment.tz(sameDay - (86400000), "America/New_York");
-        if (sameDay.day() == 0)
-            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
         if (sameDay.day() == 6)
+            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
+        if (sameDay.day() == 0)
             sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
         if (dayBefore.day() == 0)
             dayBefore = moment.tz(moment(dayBefore) - (86400000), "America/New_York");
@@ -255,19 +267,35 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 
-app.get('/getSymbolsByDate', async ((req, res) => {
+app.get('/predictInvestmentsByDate', async ((req, res) => {
+    console.log('get/predictInvestmentsByDate/');
     try {
-        res.send(await (getSymbolsByDate()));
+        res.send(await(predictInvestmentsByDate()));
     }
     catch (err) {
         console.log(err);
         res.sendStatus(400);
     }
 }));
-app.post('/getSymbolsByDate', async ((req, res) => {
+app.post('/predictInvestmentsByDate', async ((req, res) => {
     var { date } = req.body;
+    console.log('post/predictInvestmentsByDate/' + date);
     try {
-        res.send(await (getSymbolsByDate(date)));
+        res.send(await(predictInvestmentsByDate(date)));
+    }
+    catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
+}));
+app.post('/getPositionReturns', async ((req, res) => {
+    var { date, symbol } = req.body;
+    console.log('post/getPositionReturns/' + symbol + '/' + date);
+    if (!date || !symbol)
+        res.sendStatus(400);
+
+    try {
+        res.send(await(getPositionReturns(symbol, date)));
     }
     catch (err) {
         console.log(err);
