@@ -50,10 +50,10 @@ var getPositionReturns = async(function(symbol, date) {
     var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, false, true));
 
     if (dataStart.length == 1 && dataEnd.length == 1) {
-        return dataEnd[0].close / dataStart[0].close;
+        return ({ return: (dataEnd[0].close / dataStart[0].close)});
     }
 
-    return 1;
+    return ({ return: 1});
 });
 
 var predictInvestmentsByDate = async(function(date) {
