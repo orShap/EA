@@ -44,7 +44,7 @@ module.exports = {
                     try {
                         arrValues   = dayRows[nDayIndex].substring(1).split(',');
                         var lDate   = parseInt(arrValues[0].substring(a.length));
-                        currDate    = utils.clearFormatedTZDate(moment.tz(moment(startDate).milliseconds() + (lDate * 1000), "America/New_York"));
+                        currDate    = utils.clearFormatedTZDate(moment.tz(moment(startDate).milliseconds() + (lDate * 1000), "America/New_York")).substring(0,10);
                     }
                     catch (err) { };
 
