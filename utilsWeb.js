@@ -7,9 +7,6 @@ const await = require('asyncawait/await');
 module.exports = {
     
     getYahooShareDataBeforeWantedDate : async (function(symbol, nNumOfDays, wantedDate, firstDayLessThan, firstDayGreaterOrEqual) {
-        
-        if (symbol == "RDS.A")
-        var a=3;
 
         const url = "https://finance.yahoo.com/quote/" + symbol + "/history?"
         var arrToReturn = [];
@@ -53,9 +50,9 @@ module.exports = {
 
                     if (currDate < wantedDate) {
 
-                        for (let nOffsetIndex = 0; 
+                        for (let nOffsetIndex = firstDayGreaterOrEqual ? 1 : 0; 
                             ((firstDayLessThan) && (nOffsetIndex < nNumOfDays) && (nOffsetIndex + nDayIndex < dayRows.length - 1)) || 
-                            ((firstDayGreaterOrEqual) && (nOffsetIndex <= nDayIndex) && (nDayIndex - nOffsetIndex >= 0)); 
+                            ((firstDayGreaterOrEqual) && (nOffsetIndex <= nNumOfDays) && (nDayIndex - nOffsetIndex >= 0)); 
                             nOffsetIndex++) {
 
                             try {
