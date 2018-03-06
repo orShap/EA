@@ -46,8 +46,8 @@ app.listen(port, function () {
 
 var getPositionReturns = async(function(symbol, date) {
     var wantedDate = utils.clearFormatedTZDate(moment.tz(date, "America/New_York")).substring(0,10);
-    var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, dayAfterWantedDate, true, false));
-    var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, dayAfterWantedDate, false, true));
+    var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, true, false));
+    var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, false, true));
 
     if (dataStart.length == 1 && dataEnd.length == 1) {
         return dataEnd[0].close / dataStart[0].close;
