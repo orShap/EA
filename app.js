@@ -34,7 +34,6 @@ app.listen(port, function () {
 // // git push heroku master
 // // heroku logs -t
 //
-//
 // firebase ruls
 // {
 //  "rules": {
