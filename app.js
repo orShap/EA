@@ -125,7 +125,6 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
             else
                 console.log(err);
         }
-            
     })
 
     )));
