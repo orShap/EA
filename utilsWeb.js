@@ -91,7 +91,7 @@ module.exports = {
                             }
                             catch (err) {
                                 if (dayRows[nOffsetIndex + nDayIndex].indexOf("DIVIDEND") == -1)
-                                    console.log(err);
+                                    console.log(dayRows[nOffsetIndex + nDayIndex] + "\n" + err);
                                 else
                                     nNumOfDays++;
                             }

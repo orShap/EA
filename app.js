@@ -33,6 +33,7 @@ app.listen(port, function () {
 //
 // // git push heroku master
 // // heroku logs -t
+// // herolu restart -a shapira
 //
 // firebase ruls
 // {
@@ -272,7 +273,6 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 app.get('/predictInvestmentsByDate', async ((req, res) => {
-    console.log('get/predictInvestmentsByDate/');
     try {
         res.send(await(predictInvestmentsByDate()));
     }
@@ -283,7 +283,6 @@ app.get('/predictInvestmentsByDate', async ((req, res) => {
 }));
 app.post('/predictInvestmentsByDate', async ((req, res) => {
     var { date } = req.body;
-    console.log('post/predictInvestmentsByDate/' + date);
     try {
         res.send(await(predictInvestmentsByDate(date)));
     }
@@ -294,7 +293,6 @@ app.post('/predictInvestmentsByDate', async ((req, res) => {
 }));
 app.post('/getPositionReturns', async ((req, res) => {
     var { date, symbol } = req.body;
-    console.log('post/getPositionReturns/' + symbol + '/' + date);
     if (!date || !symbol)
         res.sendStatus(400);
 
