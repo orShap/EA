@@ -44,7 +44,7 @@ server.setTimeout(600000);
 //}
 //
 
-var getPositionReturns = async(function(symbol, date) {
+var getPositionReturns = async(function(symbol, date, callback) {
     var wantedDate = utils.clearFormatedTZDate(moment.tz(date, "America/New_York")).substring(0,10);
     var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, true, false));
     var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, false, true));
@@ -59,10 +59,11 @@ var getPositionReturns = async(function(symbol, date) {
          });
     }
 
+    callback({ positionReturn: 1});
     return ({ positionReturn: 1});
 });
 
-var predictInvestmentsByDate = async(function(date) {
+var predictInvestmentsByDate = async(function(date, callback) {
 
     var ET = utils.dateToCheck(date);
     var updates = {};
@@ -105,6 +106,7 @@ var predictInvestmentsByDate = async(function(date) {
             database.ref().update(updates);
         }
 
+        callback(arrEarningAnnouncements);
         return (arrEarningAnnouncements);
     }
 });
@@ -274,7 +276,9 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 app.get('/predictInvestmentsByDate', async ((req, res) => {
     try {
-        res.send(await(predictInvestmentsByDate()));
+        //res.send(await(predictInvestmentsByDate()));
+        predictInvestmentsByDate();
+        res.sendStatus(200);
     }
     catch (err) {
         console.log(err);
@@ -284,7 +288,9 @@ app.get('/predictInvestmentsByDate', async ((req, res) => {
 app.post('/predictInvestmentsByDate', async ((req, res) => {
     var { date } = req.body;
     try {
-        res.send(await(predictInvestmentsByDate(date)));
+        //res.send(await(predictInvestmentsByDate(date)));
+        predictInvestmentsByDate(date);
+        res.sendStatus(200);
     }
     catch (err) {
         console.log(err);
@@ -295,9 +301,11 @@ app.post('/getPositionReturns', async ((req, res) => {
     var { date, symbol } = req.body;
     if (!date || !symbol)
         res.sendStatus(400);
-
     try {
-        res.send(await(getPositionReturns(symbol, date)));
+        var goOn = true;
+        //res.send(await(getPositionReturns(symbol, date)));
+        getPositionReturns(symbol,date);
+        res.sendStatus(200);
     }
     catch (err) {
         console.log(err);
