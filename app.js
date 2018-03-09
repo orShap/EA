@@ -59,7 +59,7 @@ var getPositionReturns = async(function(symbol, date, callback) {
          });
     }
 
-    callback({ positionReturn: 1});
+    if (callback) callback({ positionReturn: 1});
     return ({ positionReturn: 1});
 });
 
@@ -106,7 +106,7 @@ var predictInvestmentsByDate = async(function(date, callback) {
             database.ref().update(updates);
         }
 
-        callback(arrEarningAnnouncements);
+        if (callback) callback(arrEarningAnnouncements);
         return (arrEarningAnnouncements);
     }
 });
