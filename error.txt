@@ -1,0 +1,71 @@
+ Segmentation fault
+ npm ERR! code ELIFECYCLE
+ npm ERR! errno 139
+ npm ERR! functions@ start: `node app.js`
+ npm ERR! Exit status 139
+ npm ERR!
+ npm ERR! Failed at the functions@ start script.
+ npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+ npm ERR! A complete log of this run can be found in:
+ npm ERR!     /app/.npm/_logs/2018-03-07T21_20_11_094Z-debug.log
+1]: State changed from up to crashed
+1]: State changed from crashed to starting
+er]: at=error code=H13 desc="Connection closed without response" method=POST path="/predictInvestmentsByDate" host=shapira.herokuapp.com request_id=b921001d-7b07-4d5a-a5a7-4eeda1ee5c8b fwd
+1]: Process exited with status 139
+1]: Starting process with command `npm start`
+
+ > functions@ start /app
+ > node app.js
+
+ listening on port 56164!
+ 
+ 
+ 
+ 
+ 
+
+#
+# Fatal error in ../deps/v8/src/deoptimizer.cc, line 721
+# Check failed: catch_handler_frame_index < count.
+#
+Illegal instruction
+npm ERR! code ELIFECYCLE
+npm ERR! errno 132
+npm ERR! functions@ start: `node app.js`
+npm ERR! Exit status 132
+npm ERR!
+npm ERR! Failed at the functions@ start script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /app/.npm/_logs/2018-03-07T21_32_04_641Z-debug.log
+]: State changed from up to crashed
+]: State changed from crashed to starting
+r]: at=error code=H13 desc="Connection closed without response" method=POST path="/predictInvestmentsByD
+]: Process exited with status 132
+
+
+
+
+#
+# Fatal error in ../deps/v8/src/deoptimizer.cc, line 721
+# Check failed: catch_handler_frame_index < count.
+#
+Illegal instruction
+npm ERR! code ELIFECYCLE
+npm ERR! errno 132
+npm ERR! functions@ start: `node app.js`
+npm ERR! Exit status 132
+npm ERR!
+npm ERR! Failed at the functions@ start script.
+npm ERR! This is probably not a problem with npm. There is likely additional logging output above.
+
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /app/.npm/_logs/2018-03-07T21_34_14_256Z-debug.log
+]: State changed from up to crashed
+]: Process exited with status 132
+r]: at=error code=H10 desc="App crashed" method=POST path="/predictInvestmentsByDate" host=shapira.herokuapp.com request_id=77f7a656-ac36-45b3-beaa-5
+r]: at=error code=H10 desc="App crashed" method=POST path="/predictInvestmentsByDate" host=shapira.herokuapp.com request_id=bd428696-e925-490c-bf11-f
+r]: at=error code=H10 desc="App crashed" method=POST path="/predictInvestmentsByDate" host=shapira.herokuapp.com request_id=1fc47fdd-965f-41f9-9db9-4
+r]: at=error code=H10 desc="App crashed" method=POST path="/predictInvestmentsByDate" host=shapira.herokuapp.com request_id=abcc46ea-c735-41db-aaec-f

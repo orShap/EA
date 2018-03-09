@@ -2,7 +2,6 @@ var express = require('express');
 var app = express();
 var firebase = require("firebase");
 var moment = require("moment-timezone");
-var rp = require('request-promise');
 var utils = require('./utils');
 var utilsWeb = require('./utilsWeb');
 var utilsStrategy = require('./utilsStrategy');
@@ -24,9 +23,10 @@ var cachedSharesData;
 var cachedEarningsCalendar;
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-app.listen(port, function () {
+var server = app.listen(port, function () {
   console.log('listening on port ' + port + '!');
 });
+server.setTimeout(600000);
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
