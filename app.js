@@ -125,7 +125,7 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
             if (strErr.indexOf("Our engineers") != -1) 
                 console.log("We've been blocked!, they thing we did D-DOS-!-!-!-!-!-!-!-!-!-!-!-!")
             else
-                console.log(err);
+                console.log("!!! - " + err);
         }
     })
 
@@ -281,7 +281,7 @@ app.get('/predictInvestmentsByDate', async ((req, res) => {
         res.sendStatus(200);
     }
     catch (err) {
-        console.log(err);
+        console.log("!!! - " + err);
         res.sendStatus(400);
     }
 }));
@@ -293,7 +293,7 @@ app.post('/predictInvestmentsByDate', async ((req, res) => {
         res.sendStatus(200);
     }
     catch (err) {
-        console.log(err);
+        console.log("!!! - " + err);
         res.sendStatus(400);
     }
 }));
@@ -308,7 +308,7 @@ app.post('/getPositionReturns', async ((req, res) => {
         res.sendStatus(200);
     }
     catch (err) {
-        console.log(err);
+        console.log("!!! - " + err);
         res.sendStatus(400);
     }
 }));
