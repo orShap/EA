@@ -6,6 +6,7 @@ var utils = require('./utils');
 var utilsWeb = require('./utilsWeb');
 var utilsStrategy = require('./utilsStrategy');
 var bodyParser = require('body-parser');
+const rp = require('request-promise');
 const async = require('asyncawait/async');
 const await = require('asyncawait/await');
 firebase.initializeApp({
@@ -312,3 +313,15 @@ app.post('/getPositionReturns', async ((req, res) => {
         res.sendStatus(400);
     }
 }));
+app.post('/getProxy', async ((req, res) => {
+    var { url } = req.body;
+    try {
+        var body = await (request({url : 'https://www.zacks.com', method: 'GET'})); 
+        res.send(body);
+    }
+    catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
+}));
+
