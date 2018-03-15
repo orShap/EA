@@ -316,8 +316,9 @@ app.post('/getPositionReturns', async ((req, res) => {
 app.post('/getProxy', async ((req, res) => {
     var { url } = req.body;
     try {
-        var body = await (request({url : 'https://www.zacks.com', method: 'GET'})); 
-        res.send(body);
+        var r = await (request({url : 'https://www.zacks.com', method: 'GET'})); 
+        console.log(r.body);
+        res.send(r.body);
     }
     catch (err) {
         console.log(err);
