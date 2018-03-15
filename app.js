@@ -31,7 +31,7 @@ server.setTimeout(600000);
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-// // git push heroku master
+// // git push heroku master 
 // // heroku logs -t
 // // herolu restart -a shapira
 //
