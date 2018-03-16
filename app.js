@@ -312,7 +312,7 @@ app.post('/getPositionReturns', async ((req, res) => {
         console.log(err);
         res.sendStatus(400);
     }
-}));
+})); 
 app.post('/getProxy', async ((req, res) => {
     var { url } = req.body;
     try {
