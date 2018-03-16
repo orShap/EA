@@ -11,13 +11,6 @@
     "asyncawait": "^1.0.6",
     "body-parser": "^1.15.0",
     "express": "^4.14.0",
-    "fibers": "^2.0.0",
-    "firebase": "~4.11.0",
-    "firebase-admin": "~5.10.0",
-    "firebase-functions": "^0.8.1",
-    "logzio-nodejs": "^0.4.10",
-    "moment-timezone": "^0.5.14",
-    "request": "^2.83.0",
     "request-promise": "^4.2.2"
   },
   "private": true
