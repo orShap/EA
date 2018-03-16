@@ -19,12 +19,11 @@ server.setTimeout(600000);
 app.post('/getProxy', async ((req, res) => {
     var { url } = req.body;
     try {
-        console.log("Requested = " + url)
         var html = await (rp({url : url, method: 'GET'})); 
         res.send(html);
     }
     catch (err) {
-        console.log(err);
+        console.error(err);
         res.sendStatus(400);
     }
 }));
