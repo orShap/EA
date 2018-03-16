@@ -1,17 +1,12 @@
 {
-  "name": "functions",
-  "description": "Cloud Functions for Firebase",
-  "scripts": {
-    "start": "node app.js",
-    "start-dev": "NODE_ENV=development node-dev app.js",
-    "lint": "jshint --exclude node_modules .",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "name": "ea",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
   "dependencies": {
     "asyncawait": "^1.0.6",
-    "body-parser": "^1.15.0",
-    "express": "^4.14.0",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.3",
     "request-promise": "^4.2.2"
   },
-  "private": true
 }
