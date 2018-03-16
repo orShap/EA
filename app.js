@@ -12,13 +12,14 @@ var server = app.listen(port, function () {
 });
 server.setTimeout(600000);
 
-// // git push heroku master 
+// // git push heroku master
 // // heroku logs -t
 // // herolu restart -a shapira
 
 app.post('/getProxy', async ((req, res) => {
     var { url } = req.body;
     try {
+        console.log("Requested = " + url)
         var html = await (rp({url : url, method: 'GET'})); 
         res.send(html);
     }
