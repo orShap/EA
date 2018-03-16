@@ -11,6 +11,7 @@
     "asyncawait": "^1.0.6",
     "body-parser": "^1.18.2",
     "express": "^4.16.3",
+    "request": "^2.85.0",
     "request-promise": "^4.2.2"
   }
 }
