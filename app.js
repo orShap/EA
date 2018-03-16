@@ -19,7 +19,7 @@ server.setTimeout(600000);
 app.post('/getProxy', async ((req, res) => {
     var { url } = req.body;
     try {
-        var html = await (rp({url : 'https://www.zacks.com', method: 'GET'})); 
+        var html = await (rp({url : url, method: 'GET'})); 
         res.send(html);
     }
     catch (err) {
