@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
+  "scripts": {
+    "start": "npm run shell"
+  },
   "dependencies": {
     "asyncawait": "^1.0.6",
     "body-parser": "^1.18.2",
