@@ -8,8 +8,15 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceFolder}\\app.js"
+            "name": "heroku",
+            "program": "${workspaceFolder}\\heroku\\app.js"
+        },
+        
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "functions",
+            "program": "${workspaceFolder}\\functions\\functions\\index.js"
         }
     ]
 }

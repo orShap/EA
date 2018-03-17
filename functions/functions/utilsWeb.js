@@ -11,7 +11,9 @@ module.exports = {
 
         const url = "https://finance.yahoo.com/quote/" + symbol + "/history?"
         var arrToReturn = [];
-        var numOfTrys = 0;
+        var trys = 3;
+        var trysCounter = 0;
+        var trysExceptions = 0;
         var dayRows = [];
         var strToFind = "\"HistoricalPriceStore\":{\"prices\":";
         var a = "{\"date\":";
@@ -21,7 +23,7 @@ module.exports = {
         var e = "\"high\":";
         var f = "\"low\":";
 
-        while (arrToReturn.length == 0 && numOfTrys < 3) {
+        while (arrToReturn.length == 0 && trysCounter < trys) {
 
             var currDate    = utils.clearFormatedTZDate(moment.tz("2100-01-01", "America/New_York")).substring(0,10);
             var startDate   = utils.clearFormatedTZDate(moment.tz("1970-01-01", "America/New_York")).substring(0,10);
@@ -111,16 +113,17 @@ module.exports = {
                 }
             }
             catch (err) {
+                trysExceptions++;
                 var strErr = String(err);
                 if (strErr.indexOf("Our engineers") != -1) {
                     console.error("We've been blocked!, they think we did D-DOS-!-!-!-!-!-!-!-!-!-!-!-!")
                 }
-                else
+                else (trysExceptions == trys)
                     console.error(err);
             }
 
-            numOfTrys++;
-            if (numOfTrys == 3 && arrToReturn.length == 0) {
+            trysCounter++;
+            if (trysCounter == trys && arrToReturn.length == 0) {
                 //console.log(dayRows.length + " Lines for :    " + symbol); 
             }
         }
@@ -134,58 +137,68 @@ module.exports = {
         arrToReturn.forEach(element => containsSymbolsMap[element.symbol] = 1);
         var startDate = moment.tz("1970-01-01", "America/New_York");
 
-        try {
+        var trys = 3;
+        var trysExceptions = 0;
+        var wasException = true;
+        while (wasException && trysExceptions < trys) {
 
-            var longDate = ((moment.tz(selectedDate, "America/New_York")) - startDate) / 1000 + 22000;
-            const url = "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date=" + longDate + "&type=1";
-            var html = await (rp({
-                url : herokuProxy, 
-                method: 'POST',  
-                headers: {
-                    'Content-Type' : 'application/json',
-                    'Accept' : 'application/json',
-                }, 
-                body: JSON.stringify({url})}));
+            try {
 
-            var lines = html.split('[');
-            //console.log(selectedDate.substring(0,10) + ": " + (lines.length - 2) + " zacks earnings");
-            lines.forEach(currShareLine => {
+                var longDate = ((moment.tz(selectedDate, "America/New_York")) - startDate) / 1000 + 22000;
+                const url = "https://www.zacks.com/includes/classes/z2_class_calendarfunctions_data.php?calltype=eventscal&date=" + longDate + "&type=1";
+                var html = await (rp({
+                    url : herokuProxy, 
+                    method: 'POST',  
+                    headers: {
+                        'Content-Type' : 'application/json',
+                        'Accept' : 'application/json',
+                    }, 
+                    body: JSON.stringify({url})}));
 
-                var nStartIndex = currShareLine.indexOf("alt=\\\"");
-                if (nStartIndex != -1) {
+                var lines = html.split('[');
+                //console.log(selectedDate.substring(0,10) + ": " + (lines.length - 2) + " zacks earnings");
+                lines.forEach(currShareLine => {
 
-                    let nSymbolIndex = nStartIndex + "alt=\\\"".length;
-                    let nEndSymbolIndex = currShareLine.indexOf(" ", nSymbolIndex);
-                    let symbol = currShareLine.substring(nSymbolIndex, nEndSymbolIndex);
-                    let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : 0);
-                    let nStart = currShareLine.indexOf("<div class");
-                    let estimate = -999;
+                    var nStartIndex = currShareLine.indexOf("alt=\\\"");
+                    if (nStartIndex != -1) {
 
-                    if (nStart != -1)
-                    {
-                        var split = currShareLine.substring(0, nStart).split(',');
-                        var offset = 0;
+                        let nSymbolIndex = nStartIndex + "alt=\\\"".length;
+                        let nEndSymbolIndex = currShareLine.indexOf(" ", nSymbolIndex);
+                        let symbol = currShareLine.substring(nSymbolIndex, nEndSymbolIndex);
+                        let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : 0);
+                        let nStart = currShareLine.indexOf("<div class");
+                        let estimate = -999;
 
-                        for (var i = 0; i < split.length - 2; i++)
-                            offset += split[i].replace(" ", "").startsWith("\"") ? 0 : 1;
+                        if (nStart != -1)
+                        {
+                            var split = currShareLine.substring(0, nStart).split(',');
+                            var offset = 0;
 
-                        var strEstimate = split[4 + offset].substring(2);
-                        strEstimate = strEstimate.substring(0, strEstimate.length - 1);
-                        estimate = parseFloat(strEstimate);
-                        if (estimate == undefined || (estimate != 0 && !estimate) || isNaN(estimate))
-                            estimate = -999;
+                            for (var i = 0; i < split.length - 2; i++)
+                                offset += split[i].replace(" ", "").startsWith("\"") ? 0 : 1;
+
+                            var strEstimate = split[4 + offset].substring(2);
+                            strEstimate = strEstimate.substring(0, strEstimate.length - 1);
+                            estimate = parseFloat(strEstimate);
+                            if (estimate == undefined || (estimate != 0 && !estimate) || isNaN(estimate))
+                                estimate = -999;
+                        }
+
+                        if (!containsSymbolsMap[symbol]) {
+                            if ((nOffset == 1 && indicator == "amc") ||
+                                (nOffset == 0 && indicator == "bmo"))
+                                arrToReturn.push({symbol, estimate});
+                        }
                     }
+                });
 
-                    if (!containsSymbolsMap[symbol]) {
-                        if ((nOffset == 1 && indicator == "amc") ||
-                            (nOffset == 0 && indicator == "bmo"))
-                            arrToReturn.push({symbol, estimate});
-                    }
-                }
-            });
-        }
-        catch (err) {
-            console.error(err);
+                wasException = false;
+            }
+            catch (err) {
+                trysExceptions++;
+                if (trysExceptions == trys)
+                    console.error(err);
+            }
         }
 
         return arrToReturn;

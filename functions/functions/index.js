@@ -435,4 +435,4 @@ app.post('/predictInvestmentsByDate', async ((req, res) => {
 
 //predictInvestmentsByDate("2017-04-26")
 //getDailyReturns("2017-04-04")
-predictInvestmentsByDate("2017-08-03")
+//predictInvestmentsByDate("2017-08-03")
