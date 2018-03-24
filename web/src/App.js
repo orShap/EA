@@ -47,11 +47,13 @@ class App extends Component {
   }
 
   async addSimulationData (accountBalanceHistory, changesInBalance) {
+    const { simulationVSbalance } = this.state;
     var ret = [];
 
     ////////////////////////////////////////////////////
     ////////////////////////////////////////////////////
     ////////////////////////////////////////////////////
+    var startDay = "2017-04-01";
     var prevSim = 50000;
     var prevReal = 50000;
     var bidAskSpread = 0.0025;
@@ -62,15 +64,28 @@ class App extends Component {
     ////////////////////////////////////////////////////
     ////////////////////////////////////////////////////
     ////////////////////////////////////////////////////
-    
-    var startDay = "2017-04-01";
-    var currDay = (moment.tz(moment(startDay) + (86400000), "America/New_York")).substring(0,10);
-    var tomorrow = (moment.tz(new Date().getTime() + (86400000), "America/New_York")).substring(0,10);
 
-    while (currDay <= tomorrow) {
+    var tomorrow = (moment(new Date().getTime() + (60000 * 60 * 25)).format()).substring(0,10);
+    if (simulationVSbalance && simulationVSbalance.length > 0) {
+      let last = simulationVSbalance[simulationVSbalance.length - 1].date;
+      if (last == tomorrow) 
+        ret = simulationVSbalance.slice(0, simulationVSbalance.length - 1);
+      else 
+        ret = simulationVSbalance.slice(0, simulationVSbalance.length - 15);
+
+      startDay = ret[ret.length - 1].date;
+      prevSim = ret[ret.length - 1].sim;
+      prevReal = ret[ret.length - 1].real;
+    }
+
+    var currDay = (moment(moment(startDay) + (60000 * 60 * 25)).format()).substring(0,10);
+    
+    var counter = 0;
+
+    while (currDay <= tomorrow && counter < 15) {
 
       let currSim = await (this.simulateDate(
-        currDate, 
+        currDay, 
         prevSim, 
         changesInBalance,
         bidAskSpread, 
@@ -79,26 +94,30 @@ class App extends Component {
         commissionMinimum, 
         commissionFixed));
 
-      let currReal = Boolean(accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
+      let currReal = Boolean(accountBalanceHistory && accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
       prevReal = currReal;
+      if (currSim == prevSim)
+        counter++;
+      else 
+        counter = 0;
       prevSim = currSim;
 
-      ret.push({
-        date: currDate,
+      ret.push(Object.assign({}, {
+        date: currDay,
         sim: currSim,
         real: currReal
-      });
+      }));
 
-      currDay = (moment.tz(moment(currDay) + (86400000), "America/New_York")).substring(0,10);
+      currDay = (moment(moment(currDay) + (60000 * 60 * 25)).format()).substring(0,10);
     }
 
     return ret;
   }
 
-  async simulateDate(currDate, prevSim, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
+  async simulateDate(currDay, prevSim, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
 
     try {
-      var arrReturns = await (fetch('https://us-central1-shapira-pro.cloudfunctions.net/getDailyReturns', {
+      let arrReturns = await (fetch('https://us-central1-shapira-pro.cloudfunctions.net/getDailyReturns', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -106,7 +125,7 @@ class App extends Component {
           'mode':'no-cors',
           "Access-Control-Allow-Origin": "*",
         },
-        body: JSON.stringify({"date": "2017-04-04"})}));
+        body: JSON.stringify({"date": currDay})}));
 
         var money = prevSim;
         arrReturns = await (arrReturns.json());
@@ -149,7 +168,7 @@ class App extends Component {
       catch (err) {
         console.error(err);
       }
-    return prevSim;
+    return money;
   }
 
 

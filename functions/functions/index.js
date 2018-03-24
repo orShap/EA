@@ -51,9 +51,10 @@ var getDailyReturns = async(function(date) {
             currElement.data = await (getPositionReturns(currElement.symbol, wantedDate, updates))
             arrInfo.push(currElement);
         }
+        
+        database.ref().update(updates);
     }
 
-    database.ref().update(updates);
     return arrInfo;
 });
 
@@ -290,15 +291,15 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
     else {
 
         var sameDay = moment.tz(formatedWandedDate, "America/New_York");
-        var dayBefore = moment.tz(sameDay - (86400000), "America/New_York");
+        var dayBefore = moment.tz(moment(utils.clearFormatedTZDate(sameDay)) - (60000 * 60 * 1), "America/New_York");
         if (sameDay.day() == 6)
-            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
+            sameDay = moment.tz(moment(utils.clearFormatedTZDate(sameDay)) + (60000 * 60 * 25), "America/New_York");
         if (sameDay.day() == 0)
-            sameDay = moment.tz(moment(sameDay) + (86400000), "America/New_York");
+            sameDay = moment.tz(moment(utils.clearFormatedTZDate(sameDay)) + (60000 * 60 * 25), "America/New_York");
         if (dayBefore.day() == 0)
-            dayBefore = moment.tz(moment(dayBefore) - (86400000), "America/New_York");
+            dayBefore = moment.tz(moment(utils.clearFormatedTZDate(dayBefore)) - (60000 * 60 * 1), "America/New_York");
         if (dayBefore.day() == 6)
-            dayBefore = moment.tz(moment(dayBefore) - (86400000), "America/New_York");
+            dayBefore = moment.tz(moment(utils.clearFormatedTZDate(dayBefore)) - (60000 * 60 * 1), "America/New_York");
 
         sameDay = utils.clearFormatedTZDate(sameDay);
         dayBefore = utils.clearFormatedTZDate(dayBefore);

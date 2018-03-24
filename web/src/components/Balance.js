@@ -25,12 +25,14 @@ class TomorrowPositions extends Component {
     var config = {
         "type": "serial",
         "theme": "black",
-        "marginRight": 40,
-        "marginLeft": 40,
+        "marginRight": 100,
+        "marginLeft": 100,
+        "autoMargins": true,
         "autoMarginOffset": 20,
         "mouseWheelZoomEnabled":true,
         "dataDateFormat": "YYYY-MM-DD",
         "legend": {
+            "color" : "White",
             "equalWidths": false,
             "useGraphSettings": true,
             "valueAlign": "left",
@@ -38,10 +40,23 @@ class TomorrowPositions extends Component {
         },
         "valueAxes": [{
             "id": "v1",
+            "axisColor" : "White",
+            "gridColor" : "White",
+            "color" : "White",
             "axisAlpha": 0,
             "position": "left",
             "ignoreAxisWidth":true
         }],
+        "categoryField": "date",
+        "categoryAxis": {
+            "axisColor" : "White",
+            "gridColor" : "White",
+            "color" : "White",
+            "axisAlpha": 0,
+            "parseDates": true,
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
         "balloon": {
             "borderThickness": 1,
             "shadowAlpha": 0
@@ -91,13 +106,6 @@ class TomorrowPositions extends Component {
             "limitToGraph":"g1",
             "valueLineAlpha":0.2,
             "valueZoomable":true
-        },
-       
-        "categoryField": "date",
-        "categoryAxis": {
-            "parseDates": true,
-            "dashLength": 1,
-            "minorGridEnabled": true
         },
         "dataProvider": data
     };
