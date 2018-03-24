@@ -94,7 +94,10 @@ class App extends Component {
         commissionMinimum, 
         commissionFixed));
 
+      
       let currReal = Boolean(accountBalanceHistory && accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
+      currSim = Math.round(currSim);
+      currReal = Math.round(currReal);
       prevReal = currReal;
       if (currSim == prevSim)
         counter++;
