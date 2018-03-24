@@ -7,6 +7,7 @@ const moment        = require("moment-timezone");
 const rp            = require('request-promise');
 const async         = require('asyncawait/async');
 const await         = require('asyncawait/await');
+const cors          = require('cors');
 firebase.initializeApp({
     apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
     authDomain: "shapira-pro.firebaseapp.com",
@@ -325,12 +326,11 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 
-
-exports.getDailyReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
-
+var getDailyReturnsFn = async (function(fbReq, fbRes) {
+    
     var { date } = fbReq.body;
     if (!date)
-        res.sendStatus(400);
+        fbRes.sendStatus(400);
 
     try {
         fbRes.send(await(getDailyReturns(date)));
@@ -339,6 +339,12 @@ exports.getDailyReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
         console.error(err);
         fbRes.sendStatus(400);
     }
+});
+exports.getDailyReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
+    var corsFn = cors({origin: true});
+    corsFn(fbReq, fbRes, function() {
+        getDailyReturnsFn(fbReq, fbRes);
+    });
 }));
 exports.getPositionReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
 
@@ -364,6 +370,55 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
         fbRes.sendStatus(400);
     }
 }));
+exports.drawingsDeleteListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async (event => {
+    const { withQuantilesCheck, withWindowReturnsCheck, countOfQuantiles, windowSize, minimumPrice, minimumWindowReturn, minimumVolume } = event.params;
+    var updates = {};
+    var previous = event.data.previous.val();
+    var current = event.data.val();
+  
+    if (!previous && current) {
+        updates['/eaWebInfo/todoActions/'] = current
+        return database.ref().update(updates);
+    }
+
+    return null;
+  }));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
