@@ -33,6 +33,42 @@ var cachedEarningsCalendar;
 //}
 //
 
+var getRangeReturns = async(function(start, end) {
+    var rangeToReturn = {};
+    if (start < end) {
+        var curr = moment(start).format().substring(0,10);
+        var arrAllDates = [];
+        var paramsValues = [];
+        for(let key in utils.params) paramsValues.push(utils.params[key]);
+        var symbolsToBuy = await (database.ref('/eaSymbolsToBuy/' + paramsValues.join('/')).once('value'));
+        var positionReturns = await (database.ref('/eaPositionsInfo').once('value'));
+
+        if (symbolsToBuy.exists() && positionReturns.exists()) {
+
+            symbolsToBuy = symbolsToBuy.val();
+            positionReturns = positionReturns.val();
+            
+            while (curr <= end) {
+                let arrInfo = [];
+                let currSymbolsToBuy = symbolsToBuy[curr];
+                let currDateReturn = positionReturns[curr]
+                if (currSymbolsToBuy) {
+                    Object.keys(currSymbolsToBuy).forEach(k => {
+                        let currShare = currSymbolsToBuy[k];
+                        if (currShare) {
+                            currShare.data = currDateReturn[currShare.symbol.replace('.','-')];
+                            arrInfo.push(currShare);
+                        }
+                    });
+                }
+                rangeToReturn[curr] = arrInfo;
+                curr = moment(moment(curr) + (60000 * 60 * 25)).format().substring(0,10);
+            }
+        }
+    }
+    return (rangeToReturn);
+})
+
 var getDailyReturns = async(function(date) {
     var wantedDate = utils.clearFormatedTZDate(moment.tz(date, "America/New_York")).substring(0,10);
     var paramsValues = [];
@@ -44,6 +80,7 @@ var getDailyReturns = async(function(date) {
     var snapshot = await (database.ref(dbPath).once('value'));
     
     if (snapshot.exists()) {
+
         var symbolsToBuy = snapshot.val();
         var keys = Object.keys(symbolsToBuy);
         for (var k = 0; k < keys.length; k++) {
@@ -51,7 +88,7 @@ var getDailyReturns = async(function(date) {
             currElement.data = await (getPositionReturns(currElement.symbol, wantedDate, updates))
             arrInfo.push(currElement);
         }
-        
+            
         database.ref().update(updates);
     }
 
@@ -326,10 +363,22 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 
+var getRangeReturnsFN = async (function(fbReq, fbRes) {
+    const { start, end } = fbReq.body;
+    if (!start || !end || start > end)
+        fbRes.sendStatus(400);
 
+    try {
+        fbRes.send(await(getRangeReturns(start, end)));
+    }
+    catch (err) {
+        console.error(err);
+        fbRes.sendStatus(400);
+    }
+});
 var getDailyReturnsFn = async (function(fbReq, fbRes) {
     
-    var { date } = fbReq.body;
+    const { date } = fbReq.body;
     if (!date)
         fbRes.sendStatus(400);
 
@@ -341,6 +390,12 @@ var getDailyReturnsFn = async (function(fbReq, fbRes) {
         fbRes.sendStatus(400);
     }
 });
+exports.getRangeReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
+    var corsFn = cors({origin: true});
+    corsFn(fbReq, fbRes, function() {
+        getRangeReturnsFN(fbReq, fbRes);
+    });
+}));
 exports.getDailyReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
     var corsFn = cors({origin: true});
     corsFn(fbReq, fbRes, function() {

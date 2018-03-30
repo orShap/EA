@@ -5,24 +5,8 @@ class TomorrowPositions extends Component {
 
   constructor(props) {
     super(props);
-    this.makeChartConfig = this.makeChartConfig.bind(this)
-    this.state = {}
-  }
-
-  componentWillMount () {
-    const { data } = this.props;
-    this.makeChartConfig(data);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const { data } = nextProps;
-    this.makeChartConfig(data);
-  }
-
-  makeChartConfig(data) {
-
-
-    var config = {
+    this.state = { data : []} 
+    this.chartConfig = {
         "type": "serial",
         "theme": "black",
         "marginRight": 100,
@@ -106,21 +90,19 @@ class TomorrowPositions extends Component {
             "limitToGraph":"g1",
             "valueLineAlpha":0.2,
             "valueZoomable":true
-        },
-        "dataProvider": data
+        }
     };
-    
+  }
 
-    this.setState({ config });
+  componentWillReceiveProps(nextProps) {
+    const { data } = nextProps;
+    this.refs.amChart.state.chart.dataProvider = data;
+    this.refs.amChart.state.chart.validateData();
   }
 
   render() {
-    const { config } = this.state
-    const { style } = this.props
-    
-    return (
-        <AmCharts.React style={style} options={config} />
-    );
+    const {style} = this.props;
+    return <AmCharts.React ref="amChart" style={style} options={this.chartConfig}/>
   }
 }
 

@@ -23,7 +23,7 @@ class TomorrowPositions extends Component {
     var down = []
     var up = []
     Object.values(data || {}).forEach(e => {
-      if (e.direction == 1)
+      if (e.direction === 1)
         up.push(e);
       else
         down.push(e);

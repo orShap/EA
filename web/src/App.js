@@ -43,84 +43,45 @@ class App extends Component {
     var todoActions = webInfo.todoActions;
 
     this.setState({simulationVSbalance, accountData, changesInBalance, currentPositions, todoActions});
-
   }
 
   async addSimulationData (accountBalanceHistory, changesInBalance) {
     const { simulationVSbalance } = this.state;
     var ret = [];
-
-    ////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////
-    var startDay = "2017-04-01";
-    var prevSim = 50000;
-    var prevReal = 50000;
-    var bidAskSpread = 0.0025;
-    var percentOfLossStoplossLimit = -5;
-    var commissionPerShare = 0.01; 
-    var commissionMinimum = 5;
-    var commissionFixed = 0;
-    ////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////
-
-    var tomorrow = (moment(new Date().getTime() + (60000 * 60 * 25)).format()).substring(0,10);
-    if (simulationVSbalance && simulationVSbalance.length > 0) {
-      let last = simulationVSbalance[simulationVSbalance.length - 1].date;
-      if (last == tomorrow) 
-        ret = simulationVSbalance.slice(0, simulationVSbalance.length - 1);
-      else 
-        ret = simulationVSbalance.slice(0, simulationVSbalance.length - 15);
-
-      startDay = ret[ret.length - 1].date;
-      prevSim = ret[ret.length - 1].sim;
-      prevReal = ret[ret.length - 1].real;
-    }
-
-    var currDay = (moment(moment(startDay) + (60000 * 60 * 25)).format()).substring(0,10);
     
-    var counter = 0;
-
-    while (currDay <= tomorrow && counter < 15) {
-
-      let currSim = await (this.simulateDate(
-        currDay, 
-        prevSim, 
-        changesInBalance,
-        bidAskSpread, 
-        percentOfLossStoplossLimit, 
-        commissionPerShare, 
-        commissionMinimum, 
-        commissionFixed));
-
-      
-      let currReal = Boolean(accountBalanceHistory && accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
-      currSim = Math.round(currSim);
-      currReal = Math.round(currReal);
-      prevReal = currReal;
-      if (currSim == prevSim)
-        counter++;
-      else 
-        counter = 0;
-      prevSim = currSim;
-
-      ret.push(Object.assign({}, {
-        date: currDay,
-        sim: currSim,
-        real: currReal
-      }));
-
-      currDay = (moment(moment(currDay) + (60000 * 60 * 25)).format()).substring(0,10);
-    }
-
-    return ret;
-  }
-
-  async simulateDate(currDay, prevSim, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
-
     try {
-      let arrReturns = await (fetch('https://us-central1-shapira-pro.cloudfunctions.net/getDailyReturns', {
+
+      ////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////
+      var startDay = "2017-04-01";
+      var prevSim = 50000;
+      var prevReal = 50000;
+      var bidAskSpread = 0.0025;
+      var percentOfLossStoplossLimit = -5;
+      var commissionPerShare = 0.01; 
+      var commissionMinimum = 5;
+      var commissionFixed = 0;
+      ////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////
+
+      var tomorrow = (moment(new Date().getTime() + (60000 * 60 * 25)).format()).substring(0,10);
+      if (simulationVSbalance && simulationVSbalance.length > 0) {
+        let last = simulationVSbalance[simulationVSbalance.length - 1].date;
+        if (last === tomorrow) 
+          ret = simulationVSbalance.slice(0, simulationVSbalance.length - 1);
+        else 
+          ret = simulationVSbalance.slice(0, simulationVSbalance.length - 15);
+
+        startDay = ret[ret.length - 1].date;
+        prevSim = ret[ret.length - 1].sim;
+        prevReal = ret[ret.length - 1].real;
+      }
+
+      var currDay = (moment(moment(startDay) + (60000 * 60 * 25)).format()).substring(0,10);    
+      var counter = 0;
+      let objRangeReturns = await (fetch('https://us-central1-shapira-pro.cloudfunctions.net/getRangeReturns', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -128,49 +89,106 @@ class App extends Component {
           'mode':'no-cors',
           "Access-Control-Allow-Origin": "*",
         },
-        body: JSON.stringify({"date": currDay})}));
+        body: JSON.stringify({start: currDay, end: tomorrow})}));
 
-        var money = prevSim;
-        arrReturns = await (arrReturns.json());
-        if (arrReturns.length > 0) {
+      objRangeReturns = await (objRangeReturns.json());
 
-          var dSum = 0;
-          arrReturns.forEach(item =>
-          {
-              var dRatio = item.investmentRatio;
-              var dPositionsStartValue = money * dRatio;
-              var nCountOfShares = Math.round(dPositionsStartValue / item.data.open) + 1;
+      while (currDay <= tomorrow && counter < 15) {
 
-              var dAvragePrice = (item.data.close + item.data.open) / 2;
-              var dBidAskSpread = bidAskSpread * dAvragePrice * item.direction;
-              var change = (((item.data.close - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * item.direction;
+        let currSim = await (this.simulateDate(
+          objRangeReturns[currDay],
+          prevSim, 
+          changesInBalance,
+          bidAskSpread, 
+          percentOfLossStoplossLimit, 
+          commissionPerShare, 
+          commissionMinimum, 
+          commissionFixed));
 
-              if (percentOfLossStoplossLimit !== 0)
-              {
-                  // dBidAskSpread is signed accoarding the direction!!!
-                  var dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * 1;
-                  var dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * -1;
-                  if (((item.direction === 1) && (dLongPosition_OpenToLow <= percentOfLossStoplossLimit)) ||
-                      ((item.direction === -1) && (dShortPosition_OpenToHigh <= percentOfLossStoplossLimit)))
-                  {
-                      change = percentOfLossStoplossLimit;
-                  }
-              }
+        
+        let currReal = Boolean(accountBalanceHistory && accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
+        currSim = Math.round(currSim);
+        currReal = Math.round(currReal);
+        prevReal = currReal;
+        if (currSim === prevSim)
+          counter++;
+        else 
+          counter = 0;
+        prevSim = currSim;
 
-              change = (100 + change) / 100;
-              var dTotalCommition = nCountOfShares * commissionPerShare;
-              dTotalCommition = dTotalCommition < commissionMinimum ? commissionMinimum : dTotalCommition;
-              dTotalCommition = commissionFixed !== 0 ? commissionFixed : dTotalCommition;
-              var dPL = ((dPositionsStartValue - dTotalCommition) * change) - dTotalCommition;
-              dSum += dPL;
-          });
-          
-          money = dSum;
-        }
+        ret.push(Object.assign({}, {
+          date: currDay,
+          sim: currSim,
+          real: currReal
+        }));
+
+        this.setState({simulationVSbalance: ret});
+        await (this.delayPromise(50));
+        currDay = (moment(moment(currDay) + (60000 * 60 * 25)).format()).substring(0,10);
       }
-      catch (err) {
-        console.error(err);
-      }
+    }
+    catch (err) {
+      console.error(err);
+    }
+
+    return ret;
+  }
+
+  delayPromise(delay) {  
+    //return a function that accepts a single variable
+
+      //this function returns a promise.
+      return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+          resolve(true);
+        }, delay);
+      });
+    
+  }
+
+  async simulateDate(currDayReturns, prevSim, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
+
+    var money = prevSim;
+    if (currDayReturns.length > 0) {
+      
+      var dSum = 0;
+      currDayReturns.forEach(item =>
+      {
+          let change = 0;
+          let dRatio = item.investmentRatio;
+          let dPositionsStartValue = money * dRatio;
+          let nCountOfShares = 0;
+
+          if (item.data) {
+            
+            let dAvragePrice = (item.data.close + item.data.open) / 2;
+            let dBidAskSpread = bidAskSpread * dAvragePrice * item.direction;
+            nCountOfShares = Math.round(dPositionsStartValue / item.data.open) + 1;
+            change = (((item.data.close - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * item.direction;
+            if (percentOfLossStoplossLimit !== 0)
+            {
+                // dBidAskSpread is signed accoarding the direction!!!
+                let dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * 1;
+                let dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * -1;
+                if (((item.direction === 1) && (dLongPosition_OpenToLow <= percentOfLossStoplossLimit)) ||
+                    ((item.direction === -1) && (dShortPosition_OpenToHigh <= percentOfLossStoplossLimit)))
+                {
+                    change = percentOfLossStoplossLimit;
+                }
+            }
+          }
+
+          change = (100 + change) / 100;
+          var dTotalCommition = nCountOfShares * commissionPerShare;
+          dTotalCommition = dTotalCommition < commissionMinimum ? commissionMinimum : dTotalCommition;
+          dTotalCommition = commissionFixed !== 0 ? commissionFixed : dTotalCommition;
+          var dPL = ((dPositionsStartValue - dTotalCommition) * change) - dTotalCommition;
+          dSum += dPL;
+      });
+      
+      money = dSum;
+    }
+      
     return money;
   }
 
