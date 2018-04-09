@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import LazyLoad from 'react-lazyload';
 import AccountInfo from './components/AccountInfo';
 import Balance from './components/Balance';
 import TomorrowPositions from './components/TomorrowPositions';
+
 
 import './App.css';
 import './assets/css/noscript.css'
@@ -24,10 +26,15 @@ class App extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { };
+    
     this.simulateDate = this.simulateDate.bind(this)
     this.addSimulationData = this.addSimulationData.bind(this)
     this.onFirebase = this.onFirebase.bind(this)
+    this.makeGallery = this.makeGallery.bind(this)
+    this.getSpan = this.getSpan.bind(this)
+    this.state = {
+      galleryCollection : this.makeGallery()
+    }
   }
 
   componentDidMount() {
@@ -135,6 +142,7 @@ class App extends Component {
   }
 
   delayPromise(delay) {  
+
     //return a function that accepts a single variable
 
       //this function returns a promise.
@@ -193,9 +201,68 @@ class App extends Component {
   }
 
 
+  getSpan(count) {
+    var threshold = count === 1 ? count : (count-1);
+    var sum = 0;
+    var arrToRet = [];
+    
+    while (sum < count) {
+      console.log("sum:" + sum + " count:" + count)
+      let a = Math.ceil(Math.random() * threshold);
+      sum += a;
+      threshold = (count-sum);
+      arrToRet.push("span-" + a);
+    }
+
+    return arrToRet;
+  }
+
+  makeGallery() {
+
+    var galleryCollection = null;
+    var collections = [];
+    var positions = ['top','bottom', 'center', 'left', 'right']
+    var count = 0;
+    var filename = "";
+    let offsetPicIndex = 1;
+    for (var i=1; i<163; i=offsetPicIndex) {
+      
+      var items = [];
+      count = Math.floor(Math.random() * 10);
+      if (count == 0) {
+        filename = "1 (" + i + ").jpg";
+        collections.push(React.createElement('a', { 'key':'a'+i, 'href':"./gallery/fulls/" + filename, 'className':"image filtered span-2-5", 'data-position':'center' }, [
+                          React.createElement('LazyLoad', { 'key':'l'+i, 'height':'100%' }, 
+                            React.createElement('img', { 'key':'i'+i, 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
+      }
+      else {
+        let span1 = this.getSpan(count);
+        let span2 = this.getSpan(count);
+
+        [span1, span2].forEach(span => {
+          for (var p=0; p<span.length; p++) {
+            filename = "1 (" + (offsetPicIndex) + ").jpg";
+            offsetPicIndex++;
+            items.push(React.createElement('a', { 'key':'a'+(i+p), 'href':"./gallery/fulls/" + filename, 'className':"image filtered " + span[p], 'data-position':'center' }, [
+              React.createElement('LazyLoad', { 'key':'l'+(i+p), 'height':'100%' }, 
+                React.createElement('img', { 'key':'i'+(i+p), 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
+          }
+        });
+
+        collections.push(React.createElement('div', { 'key':'d'+i, className: 'group span-' + count}, items));
+      }
+      
+    }
+    galleryCollection = React.createElement('div', { className: 'gallery' }, collections);
+
+    return galleryCollection;
+  }
+
   render() {
     
-    const {simulationVSbalance, accountData, changesInBalance, currentPositions, todoActions} = this.state;
+    const {simulationVSbalance, accountData, changesInBalance, currentPositions, todoActions, galleryCollection} = this.state;
+    
+
 
     return (
 
@@ -240,23 +307,29 @@ class App extends Component {
                   <section className="panel">
                     <div className="intro color2">
                       <h2 className="major">Gallery</h2>
-                      <p>Sed vel nibh liberetiam.</p>
                     </div>
-                    <div className="gallery">
-                      <div className="group span-3">
-                        <a href="./gallery/fulls/01.jpg" className="image filtered span-3" data-position="bottom"><img src="./gallery/thumbs/01.jpg" alt="" /></a>
-                        <a href="./gallery/fulls/02.jpg" className="image filtered span-1-5" data-position="center"><img src="./gallery/thumbs/02.jpg" alt="" /></a>
-                        <a href="./gallery/fulls/03.jpg" className="image filtered span-1-5" data-position="bottom"><img src="./gallery/thumbs/03.jpg" alt="" /></a>
-                      </div>
-                      <a href="./gallery/fulls/04.jpg" className="image filtered span-2-5" data-position="top"><img src="./gallery/thumbs/04.jpg" alt="" /></a>
-                      <div className="group span-4-5">
-                        <a href="./gallery/fulls/05.jpg" className="image filtered span-3" data-position="top"><img src="./gallery/thumbs/05.jpg" alt="" /></a>
-                        <a href="./gallery/fulls/06.jpg" className="image filtered span-1-5" data-position="center"><img src="./gallery/thumbs/06.jpg" alt="" /></a>
-                        <a href="./gallery/fulls/07.jpg" className="image filtered span-1-5" data-position="bottom"><img src="./gallery/thumbs/07.jpg" alt="" /></a>
-                        <a href="./gallery/fulls/08.jpg" className="image filtered span-3" data-position="top"><img src="./gallery/thumbs/08.jpg" alt="" /></a>
-                      </div>
-                      <a href="./gallery/fulls/09.jpg" className="image filtered span-2-5" data-position="right"><img src="./gallery/thumbs/09.jpg" alt="" /></a>
-                    </div>
+        
+                      
+                        {galleryCollection}
+    
+                      
+                      {Boolean(false) && 
+                      <div className="gallery">
+                        <div className="group span-3">
+                          <a href="./gallery/fulls/01.jpg" className="image filtered span-3" data-position="bottom"><img src="./gallery/thumbs/01.jpg" alt="" /></a>
+                          <a href="./gallery/fulls/02.jpg" className="image filtered span-1-5" data-position="center"><img src="./gallery/thumbs/02.jpg" alt="" /></a>
+                          <a href="./gallery/fulls/03.jpg" className="image filtered span-1-5" data-position="bottom"><img src="./gallery/thumbs/03.jpg" alt="" /></a>
+                        </div>
+                        <a href="./gallery/fulls/04.jpg" className="image filtered span-2-5" data-position="top"><img src="./gallery/thumbs/04.jpg" alt="" /></a>
+                        <div className="group span-4-5">
+                          <a href="./gallery/fulls/05.jpg" className="image filtered span-3" data-position="top"><img src="./gallery/thumbs/05.jpg" alt="" /></a>
+                          <a href="./gallery/fulls/06.jpg" className="image filtered span-1-5" data-position="center"><img src="./gallery/thumbs/06.jpg" alt="" /></a>
+                          <a href="./gallery/fulls/07.jpg" className="image filtered span-1-5" data-position="bottom"><img src="./gallery/thumbs/07.jpg" alt="" /></a>
+                          <a href="./gallery/fulls/08.jpg" className="image filtered span-3" data-position="top"><img src="./gallery/thumbs/08.jpg" alt="" /></a>
+                        </div>
+                        <a href="./gallery/fulls/09.jpg" className="image filtered span-2-5" data-position="right"><img src="./gallery/thumbs/09.jpg" alt="" /></a>
+                      </div>}
+
                   </section>
 
                    

@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
+import DatePicker from 'react-datepicker';
 import AmCharts from "@amcharts/amcharts3-react";
+import moment from 'moment';
 
 class TomorrowPositions extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { data : []} 
+
     this.chartConfig = {
         "type": "serial",
         "theme": "black",
@@ -92,6 +94,22 @@ class TomorrowPositions extends Component {
             "valueZoomable":true
         }
     };
+
+
+
+    this.state = {
+      data: [],
+      startDate: moment("2017-04-01"),
+      endDate: moment()
+    };
+    this.handleDateChange = this.handleDateChange.bind(this);
+  }
+   
+  handleDateChange(start, end) {
+    if (start && start > moment("2017-04-01") && start < this.state.endDate) 
+      this.setState({startDate: start});
+    if (end && end <= moment()) 
+      this.setState({endDate: end});
   }
 
   componentWillReceiveProps(nextProps) {
@@ -102,7 +120,13 @@ class TomorrowPositions extends Component {
 
   render() {
     const {style} = this.props;
-    return <AmCharts.React ref="amChart" style={style} options={this.chartConfig}/>
+    return (
+        <div>
+            <DatePicker selected={this.state.startDate} onChange={(d) => this.handleDateChange(d, null)}/>;
+            <DatePicker selected={this.state.endDate} onChange={(d) => this.handleDateChange(null, d)}/>;
+            <AmCharts.React ref="amChart" style={style} options={this.chartConfig}/>
+        </div>
+    );
   }
 }
 

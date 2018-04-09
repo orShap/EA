@@ -27,13 +27,13 @@ module.exports = {
 
         var wantedTimeET;
         var validTimeCheck = true;
-        
+        var isWeekend = false;
         if (date) 
             wantedTimeET = this.clearFormatedTZDate(moment.tz(date, "America/New_York"));
         else {
             var timeCheckET = moment.tz('America/New_York');
-            if (timeCheckET.day() == 0 || timeCheckET.day() == 6)
-                validTimeCheck = false;
+            isWeekend = timeCheckET.day() == 0 || timeCheckET.day() == 6;
+            validTimeCheck = !isWeekend
                 
             if ((timeCheckET.hour() != this.decisionsTime.hour) || 
                 (timeCheckET.minute() < this.decisionsTime.minute))
@@ -42,7 +42,7 @@ module.exports = {
             wantedTimeET = this.clearFormatedTZDate(moment.tz(moment(timeCheckET) + (60000 * 60 * 25), "America/New_York"));
         }
         
-        return ({ wantedTimeET, validTimeCheck });
+        return ({ wantedTimeET, validTimeCheck, isWeekend });
         
         
     },

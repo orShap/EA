@@ -55,7 +55,7 @@ var getRangeReturns = async(function(start, end) {
                 if (currSymbolsToBuy) {
                     Object.keys(currSymbolsToBuy).forEach(k => {
                         let currShare = currSymbolsToBuy[k];
-                        if (currShare) {
+                        if (currShare && currShare.symbol) {
                             currShare.data = currDateReturn[currShare.symbol.replace('.','-')];
                             arrInfo.push(currShare);
                         }
@@ -145,7 +145,7 @@ var predictInvestmentsByDate = async(function(date) {
     var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
 
     // Not a valid time
-    if (!ET.validTimeCheck) {
+    if (!ET.validTimeCheck && !ET.isWeekend) {
         var now = moment.tz('America/New_York');
         var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm') };
 
@@ -426,7 +426,24 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
         fbRes.sendStatus(400);
     }
 }));
-exports.drawingsDeleteListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async (event => {
+
+const gcs = require('@google-cloud/storage')();
+//const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
+exports.getPublicURI = functions.storage.object().onChange(async ((event) => {
+    
+    if (event.data) {
+        var fileBucket = event.data.bucket;
+        var filePath = event.data.name;
+        var gcsBucket = gcs.bucket(fileBucket);
+        var file = gcsBucket.file(filePath);
+        var signedUrls = await (file.getSignedUrl({ action: 'read', expires: '01-01-2400' }));
+        console.log(signedUrls[0]);
+        updates['/eaWebInfo/' +  filePath] = signedUrls[0]
+        return database.ref().update(updates);
+    }
+    return null;
+}));
+exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async (event => {
     const { withQuantilesCheck, withWindowReturnsCheck, countOfQuantiles, windowSize, minimumPrice, minimumWindowReturn, minimumVolume } = event.params;
     var updates = {};
     var previous = event.data.previous.val();
@@ -436,7 +453,6 @@ exports.drawingsDeleteListener = functions.database.ref('/eaSymbolsToBuy/{withQu
         updates['/eaWebInfo/todoActions/'] = current
         return database.ref().update(updates);
     }
-
     return null;
   }));
 
