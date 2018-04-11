@@ -6,6 +6,7 @@
     "@amcharts/amcharts3-react": "^3.0.4",
     "asyncawait": "^1.0.6",
     "axios": "^0.18.0",
+    "copy-to-clipboard": "^3.0.8",
     "firebase": "^4.12.0",
     "moment": "^2.21.0",
     "moment-timezone": "^0.5.14",

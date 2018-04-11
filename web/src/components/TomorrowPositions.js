@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import * as Icons from 'react-icons/lib/md'
+import * as copy from 'copy-to-clipboard';
 
 class TomorrowPositions extends Component {
 
@@ -22,6 +23,7 @@ class TomorrowPositions extends Component {
   makeList(data) {
     var down = []
     var up = []
+    var clipboard = "";
     Object.values(data || {}).forEach(e => {
       if (e.direction === 1)
         up.push(e);
@@ -29,7 +31,10 @@ class TomorrowPositions extends Component {
         down.push(e);
     })
 
-    this.setState({up, down});
+    down.forEach(e => clipboard + (e.symbol + ","))
+    clipboard += '\n';
+    up.forEach(e => clipboard + (e.symbol + ","))
+    this.setState({up, down, clipboard});
   }
 
   render() {
@@ -58,6 +63,9 @@ class TomorrowPositions extends Component {
             { down.map(e => <div key={e.symbol} style={{display:'flex', flexDirection:'row'}}><div className="icon far fa-circle"/><div style={{paddingLeft: 5}}>{Math.round(e.investmentRatio * 100) + "%    - " + e.symbol}</div></div>) }
           </div>
         </div>
+        <button onClick={() =>{ alert("Sheres has been copied"); copy(this.state.clipboard);}}>
+          Copy To Clipboard
+        </button>
       </div>
     );
   }

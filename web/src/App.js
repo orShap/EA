@@ -28,11 +28,16 @@ class App extends Component {
 
     
     this.simulateDate = this.simulateDate.bind(this)
-    this.addSimulationData = this.addSimulationData.bind(this)
+    this.runSimulation = this.runSimulation.bind(this)
+    this.simulate = this.simulate.bind(this)
     this.onFirebase = this.onFirebase.bind(this)
     this.makeGallery = this.makeGallery.bind(this)
     this.getSpan = this.getSpan.bind(this)
+    this.handleDateChange = this.handleDateChange.bind(this);
+
     this.state = {
+      data: [],
+      startDate: moment("2017-04-01").format("YYYY-MM-DD"),
       galleryCollection : this.makeGallery()
     }
   }
@@ -40,19 +45,41 @@ class App extends Component {
   componentDidMount() {
     firebase.database().ref('eaWebInfo/').on('value', this.onFirebase);
   }
+
+  handleDateChange() {
+    const { startDate } = this.state;
+    try { 
+      var start = moment(startDate)
+      if (!(start && start > moment("2017-04-01")))
+        this.setState({err: "Start da te is not valid"});
+      else {
+        this.runSimulation(this.state.accountBalanceHistory, this.state.changesInBalance, startDate);
+        this.setState({startDate});
+      }
+    }
+    catch (err) {
+      this.setState({err: "Start date is not valid"});
+    }
+  }
+
   async onFirebase(snapshot) {
       
     var webInfo = snapshot.val();
-    var simulationVSbalance = await (this.addSimulationData(webInfo.accountBalanceHistory, webInfo.changesInBalance));
     var accountData = webInfo.accountData;
     var changesInBalance = webInfo.changesInBalance;
+    var accountBalanceHistory = webInfo.accountBalanceHistory;
     var currentPositions = webInfo.currentPositions;
     var todoActions = webInfo.todoActions;
-
-    this.setState({simulationVSbalance, accountData, changesInBalance, currentPositions, todoActions});
+    var simulationVSbalance = await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate));
+    this.setState({simulationVSbalance, accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions});
   }
 
-  async addSimulationData (accountBalanceHistory, changesInBalance) {
+  async runSimulation(accountBalanceHistory, changesInBalance, startDate) {
+    var simulationVSbalance = await (this.simulate(accountBalanceHistory, changesInBalance, startDate));
+    this.setState({simulationVSbalance})
+  }
+
+  async simulate(accountBalanceHistory, changesInBalance, startDate) {
     const { simulationVSbalance } = this.state;
     var ret = [];
     
@@ -230,7 +257,8 @@ class App extends Component {
       var items = [];
       count = Math.floor(Math.random() * 10);
       if (count == 0) {
-        filename = "1 (" + i + ").jpg";
+        filename = "1 (" + offsetPicIndex + ").jpg";
+        offsetPicIndex++;
         collections.push(React.createElement('a', { 'key':'a'+i, 'href':"./gallery/fulls/" + filename, 'className':"image filtered span-2-5", 'data-position':'center' }, [
                           React.createElement('LazyLoad', { 'key':'l'+i, 'height':'100%' }, 
                             React.createElement('img', { 'key':'i'+i, 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
@@ -243,9 +271,10 @@ class App extends Component {
           for (var p=0; p<span.length; p++) {
             filename = "1 (" + (offsetPicIndex) + ").jpg";
             offsetPicIndex++;
-            items.push(React.createElement('a', { 'key':'a'+(i+p), 'href':"./gallery/fulls/" + filename, 'className':"image filtered " + span[p], 'data-position':'center' }, [
-              React.createElement('LazyLoad', { 'key':'l'+(i+p), 'height':'100%' }, 
-                React.createElement('img', { 'key':'i'+(i+p), 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
+            items.push(React.createElement('a', { 'key':'aa'+(offsetPicIndex), 'href':"./gallery/fulls/" + filename, 'className':"image filtered " + span[p], 'data-position':'center' }, [
+              React.createElement('LazyLoad', { 'key':'ll'+(offsetPicIndex), 'height':'100%' }, 
+                React.createElement('img', { 'key':'ii'+(offsetPicIndex), 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
+
           }
         });
 
@@ -297,6 +326,15 @@ class App extends Component {
                     <TomorrowPositions style={{width:750, margin:20, marginRight:0}} data={todoActions}/>
                   </section>
                   <section id="Balance" className="panel">
+                    <div style={{display: 'flex', flexDirection:'column', width:150, backgroundColor: '#da7620'}}>
+                      <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
+                        <label htmlFor="startDate">Start Date:</label>
+                        <input type="text" value={this.state.startDate} onChange={(val) => this.setState({startDate : val})}/>
+                      </div>
+                      <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
+                        <button onClick={this.handleDateChange}>Run!</button>
+                      </div>
+                    </div>           
                     <Balance  style={{width:1000, margin:20, marginRight:50}} data={simulationVSbalance}/>
                   </section>
                   </section>
