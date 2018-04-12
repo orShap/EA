@@ -38,7 +38,7 @@ class App extends Component {
     this.state = {
       data: [],
       startDate: moment("2017-04-01").format("YYYY-MM-DD"),
-      galleryCollection : this.makeGallery()
+      galleryCollection : []
     }
   }
 
@@ -70,8 +70,9 @@ class App extends Component {
     var accountBalanceHistory = webInfo.accountBalanceHistory;
     var currentPositions = webInfo.currentPositions;
     var todoActions = webInfo.todoActions;
+    var galleryCollection = this.makeGallery(webInfo.gallery);
+    this.setState({simulationVSbalance, accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions, galleryCollection});
     var simulationVSbalance = await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate));
-    this.setState({simulationVSbalance, accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions});
   }
 
   async runSimulation(accountBalanceHistory, changesInBalance, startDate) {
@@ -234,7 +235,6 @@ class App extends Component {
     var arrToRet = [];
     
     while (sum < count) {
-      console.log("sum:" + sum + " count:" + count)
       let a = Math.ceil(Math.random() * threshold);
       sum += a;
       threshold = (count-sum);
@@ -244,24 +244,23 @@ class App extends Component {
     return arrToRet;
   }
 
-  makeGallery() {
-
+  makeGallery(gallery) {
     var galleryCollection = null;
     var collections = [];
     var positions = ['top','bottom', 'center', 'left', 'right']
     var count = 0;
     var filename = "";
-    let offsetPicIndex = 1;
-    for (var i=1; i<163; i=offsetPicIndex) {
+    let offsetPicIndex = 0;
+    for (var i=0; i<162; i=offsetPicIndex) {
       
       var items = [];
       count = Math.floor(Math.random() * 10);
       if (count == 0) {
-        filename = "1 (" + offsetPicIndex + ").jpg";
+        filename = gallery[offsetPicIndex];
         offsetPicIndex++;
-        collections.push(React.createElement('a', { 'key':'a'+i, 'href':"./gallery/fulls/" + filename, 'className':"image filtered span-2-5", 'data-position':'center' }, [
+        collections.push(React.createElement('a', { 'key':'a'+i, 'href': filename, 'className':"image filtered span-2-5", 'data-position':'center' }, [
                           React.createElement('LazyLoad', { 'key':'l'+i, 'height':'100%' }, 
-                            React.createElement('img', { 'key':'i'+i, 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
+                            React.createElement('img', { 'key':'i'+i, 'src': filename, 'alt':'' }, null))]))
       }
       else {
         let span1 = this.getSpan(count);
@@ -269,12 +268,11 @@ class App extends Component {
 
         [span1, span2].forEach(span => {
           for (var p=0; p<span.length; p++) {
-            filename = "1 (" + (offsetPicIndex) + ").jpg";
+            filename = gallery[offsetPicIndex];
             offsetPicIndex++;
-            items.push(React.createElement('a', { 'key':'aa'+(offsetPicIndex), 'href':"./gallery/fulls/" + filename, 'className':"image filtered " + span[p], 'data-position':'center' }, [
+            items.push(React.createElement('a', { 'key':'aa'+(offsetPicIndex), 'href': filename, 'className':"image filtered " + span[p], 'data-position':'center' }, [
               React.createElement('LazyLoad', { 'key':'ll'+(offsetPicIndex), 'height':'100%' }, 
-                React.createElement('img', { 'key':'ii'+(offsetPicIndex), 'src':"./gallery/thumbs/" + filename, 'alt':'' }, null))]))
-
+                React.createElement('img', { 'key':'ii'+(offsetPicIndex), 'src': filename, 'alt':'' }, null))]))
           }
         });
 

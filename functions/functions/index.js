@@ -92,7 +92,7 @@ var getDailyReturns = async(function(date) {
             }
         }
             
-        database.ref().update(updates);
+        await (database.ref().update(updates));
     }
 
     return arrInfo;
@@ -128,7 +128,7 @@ var getPositionReturns = async(function(symbol, date, updates) {
             else {
                 var updates = {};
                 updates[dbPath] = positionInfo;
-                database.ref().update(updates);
+                await (database.ref().update(updates));
             }
             
             return (positionInfo);
@@ -148,17 +148,16 @@ var predictInvestmentsByDate = async(function(date) {
     var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
 
     // Not a valid time
-    if (!ET.validTimeCheck && !ET.isWeekend) {
+    if (!ET.validTimeCheck) {
         var now = moment.tz('America/New_York');
-        var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm') };
-
-        // Update DB only before decisions time 
-        if ((now.hour() < utils.decisionsTime.hour) || 
-            (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
-            updates[dbPath] = notActionTime;
-            database.ref().update(updates);
+        var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm'), isWeekend: ET.isWeekend};
+        if (!ET.isWeekend) {
+            // Update DB only before decisions time 
+            if ((now.hour() < utils.decisionsTime.hour) || (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
+                updates[dbPath] = notActionTime;
+                await (database.ref().update(updates));
+            }
         }
-
         return (notActionTime);  
     }
     else {
@@ -178,7 +177,7 @@ var predictInvestmentsByDate = async(function(date) {
             arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
             arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
             updates[dbPath] = arrEarningAnnouncements;
-            database.ref().update(updates);
+            await (database.ref().update(updates));
         }
 
         return (arrEarningAnnouncements);
@@ -213,7 +212,7 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
     //});
 
     arrEarningAnnouncements.forEach(element => {if (!element.data) console.error(element.symbol + " didn't get DataLayer - " + wantedDate)});
-    database.ref().update(updates);
+    await (database.ref().update(updates));
     return arrEarningAnnouncements;
 });
 
@@ -348,7 +347,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
         var updates = {};
         updates[dbPath] = arrToReturn;
-        database.ref().update(updates);
+        await (database.ref().update(updates));
         //console.log("Took rlevant calendar from ZACKS-WEB and save it to DB!");
     }
 
