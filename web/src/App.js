@@ -71,8 +71,8 @@ class App extends Component {
     var currentPositions = webInfo.currentPositions;
     var todoActions = webInfo.todoActions;
     var galleryCollection = this.makeGallery(webInfo.gallery);
-    this.setState({simulationVSbalance, accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions, galleryCollection});
     var simulationVSbalance = await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate));
+    this.setState({simulationVSbalance, accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions, galleryCollection});
   }
 
   async runSimulation(accountBalanceHistory, changesInBalance, startDate) {

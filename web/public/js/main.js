@@ -639,7 +639,7 @@
 
 setTimeout(function() {					
 			// Gallery.
-			console.log("!!!!!!!!!!!!!!!!")
+			console.log("Can open pics from the gallery!")
 				$('.gallery')
 					.on('click', 'a', function(event) {
 
