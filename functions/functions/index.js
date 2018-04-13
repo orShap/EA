@@ -55,7 +55,7 @@ var getRangeReturns = async(function(start, end) {
                 let currDateReturn = positionReturns[curr]
                 if (currSymbolsToBuy) { 
                     if (!currDateReturn) 
-                        currDateReturn = await (getPositionReturns(currSymbolsToBuy, curr)) 
+                        currDateReturn = await (getDailyReturns(curr)) 
                     Object.keys(currSymbolsToBuy).forEach(k => {
                         let currShare = currSymbolsToBuy[k];
                         if (currShare && currShare.symbol) {

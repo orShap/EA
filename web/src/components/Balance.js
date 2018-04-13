@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker';
 import AmCharts from "@amcharts/amcharts3-react";
 import moment from 'moment';
 
-class TomorrowPositions extends Component {
+class Balance extends Component {
 
   constructor(props) {
     super(props);
@@ -115,4 +115,4 @@ class TomorrowPositions extends Component {
   }
 }
 
-export default TomorrowPositions;
+export default Balance;

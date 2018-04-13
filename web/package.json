@@ -18,6 +18,7 @@
     "react-dom": "^16.2.0",
     "react-icons": "^2.2.7",
     "react-lazyload": "^2.3.0",
+    "react-loading-indicator": "^1.0.2",
     "react-scripts": "1.1.1",
     "request-promise": "^4.2.2"
   },
