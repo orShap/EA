@@ -37,6 +37,7 @@ class App extends Component {
       data: [],
       simulationCounter: 0,
       startDate: "2017-04-01",
+      startMoney: 50000,
       gallery : [],
       accountData : -999,
       changesInBalance : -999,
@@ -51,15 +52,16 @@ class App extends Component {
   }
 
   handleDateChange() {
-    const { startDate } = this.state;
+    const { startDate, startMoney } = this.state;
   
     var start = new Date(startDate)
-    if (start == "Invalid Date")
-      this.setState({startDate: "Invalid"});
-    else if (startDate && startDate < "2017-04-01")
-      this.setState({startDate: "Must be > 2017-04-01"});
-    else if (this.state.accountBalanceHistory != -999 && this.state.changesInBalance != -999)
-      this.runSimulation(this.state.accountBalanceHistory, this.state.changesInBalance, startDate);
+    var parsed = parseInt(startMoney);
+    var ok = true;
+    if (start == "Invalid Date") { ok = false; this.setState({startDate: "Invalid"}); }
+    else if (startDate && startDate < "2017-04-01") { ok = false; this.setState({startDate: "Must be > 2017-04-01"}); }
+    if (isNaN(parsed)) { ok = false; this.setState({startMoney: "Invalid"}); }
+    else if (ok && this.state.accountBalanceHistory != -999 && this.state.changesInBalance != -999)
+      this.runSimulation(this.state.accountBalanceHistory, this.state.changesInBalance, startDate, startMoney);
   }
 
   async onFirebase(snapshot) {
@@ -71,16 +73,16 @@ class App extends Component {
     var todoActions = webInfo.todoActions;
     var gallery = webInfo.gallery;
     this.setState({accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions, gallery });
-    await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate));
+    await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate, this.state.startMoney));
   }
 
-  async runSimulation(accountBalanceHistory, changesInBalance, startDate) {
+  async runSimulation(accountBalanceHistory, changesInBalance, startDate, startMoney) {
     await (this.setState({simulationCounter:this.state.simulationCounter+1}))
-    var simulationVSbalance = await (this.simulate(accountBalanceHistory, changesInBalance, startDate));
+    var simulationVSbalance = await (this.simulate(accountBalanceHistory, changesInBalance, startDate, startMoney));
     this.setState({simulationVSbalance})
   }
 
-  async simulate(accountBalanceHistory, changesInBalance, startDate) {
+  async simulate(accountBalanceHistory, changesInBalance, startDate, startMoney) {
     const { simulationVSbalance, simulationCounter } = this.state;
     var ret = [];
 
@@ -90,8 +92,8 @@ class App extends Component {
       ////////////////////////////////////////////////////
       ////////////////////////////////////////////////////
       var startDay = startDate;
-      var prevSim = 50000;
-      var prevReal = 50000;
+      var prevSim = startMoney;
+      var prevReal = startMoney;
       var bidAskSpread = 0.0025;
       var percentOfLossStoplossLimit = -5;
       var commissionPerShare = 0.01; 
@@ -260,6 +262,8 @@ class App extends Component {
                     <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
                       <label htmlFor="startDate">Start Date:</label>
                       <input type="text" value={this.state.startDate} onChange={e => this.setState({startDate: e.target.value})}/>
+                      <label htmlFor="startDate">Start Amount:</label>
+                      <input type="text" value={this.state.startMoney} onChange={e => this.setState({startMoney: e.target.value})}/>
                     </div>
                     <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
                       <button onClick={this.handleDateChange}>Run!</button>
