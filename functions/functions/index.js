@@ -428,13 +428,13 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
 }));
 
 const gcs = require('@google-cloud/storage')();
-//const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
+const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
 exports.getPublicURI = functions.storage.object().onChange(async ((event) => {
     
     if (event.data) {
         var fileBucket = event.data.bucket;
         var filePath = event.data.name;
-        var gcsBucket = gcs.bucket(fileBucket);
+        //var gcsBucket = gcs.bucket(fileBucket);
         var file = gcsBucket.file(filePath);
         var signedUrls = await (file.getSignedUrl({ action: 'read', expires: '01-01-2400' }));
         console.log(signedUrls[0]);
