@@ -32,7 +32,7 @@ class App extends Component {
     this.simulate = this.simulate.bind(this)
     this.onFirebase = this.onFirebase.bind(this)
     this.handleDateChange = this.handleDateChange.bind(this);
-
+    this.str = "";
     this.state = {
       data: [],
       simulationCounter: 0,
@@ -44,6 +44,10 @@ class App extends Component {
       accountBalanceHistory : -999,
       currentPositions : -999,
       todoActions : -999,
+      bidAskSpread: 0.5,
+      stopLoss: -5,
+      commShare: 0.01,
+      commMin: 5,
     }
   }
 
@@ -52,16 +56,24 @@ class App extends Component {
   }
 
   handleDateChange() {
-    const { startDate, startMoney } = this.state;
+    const { startDate, startMoney, commMin, commShare, bidAskSpread, stopLoss} = this.state;
   
     var start = new Date(startDate)
-    var parsed = parseInt(startMoney);
+    var m = parseInt(startMoney);
+    var ba = parseFloat(bidAskSpread);
+    var cs = parseFloat(commShare);
+    var cm = parseFloat(commMin);
+    var sp = parseFloat(stopLoss)
     var ok = true;
     if (start == "Invalid Date") { ok = false; this.setState({startDate: "Invalid"}); }
-    else if (startDate && startDate < "2017-04-01") { ok = false; this.setState({startDate: "Must be > 2017-04-01"}); }
-    if (isNaN(parsed)) { ok = false; this.setState({startMoney: "Invalid"}); }
-    else if (ok && this.state.accountBalanceHistory != -999 && this.state.changesInBalance != -999)
-      this.runSimulation(this.state.accountBalanceHistory, this.state.changesInBalance, startDate, startMoney);
+    else if (startDate && startDate < "2017-04-01") { ok = false; this.setState({startDate: "Must be > 2017-04-01"});  }
+    if (isNaN(m))  { ok = false; this.setState({startMoney: "Invalid"});   } else { this.setState({startMoney: m});    }
+    if (isNaN(ba)) { ok = false; this.setState({bidAskSpread: "Invalid"}); } else { this.setState({bidAskSpread: ba}); }
+    if (isNaN(cs)) { ok = false; this.setState({commShare: "Invalid"});    } else { this.setState({commShare: cs});    }
+    if (isNaN(cm)) { ok = false; this.setState({commMin: "Invalid"});      } else { this.setState({commMin: cm});      }
+    if (isNaN(sp)) { ok = false; this.setState({stopLoss: "Invalid"});     } else { this.setState({stopLoss: sp});     }
+    if (ok && this.state.accountBalanceHistory != -999 && this.state.changesInBalance != -999)
+      this.runSimulation(this.state.accountBalanceHistory, this.state.changesInBalance);
   }
 
   async onFirebase(snapshot) {
@@ -73,17 +85,17 @@ class App extends Component {
     var todoActions = webInfo.todoActions;
     var gallery = webInfo.gallery;
     this.setState({accountData, changesInBalance, accountBalanceHistory, currentPositions, todoActions, gallery });
-    await (this.runSimulation(accountBalanceHistory, changesInBalance, this.state.startDate, this.state.startMoney));
+    await (this.runSimulation(accountBalanceHistory, changesInBalance));
   }
 
-  async runSimulation(accountBalanceHistory, changesInBalance, startDate, startMoney) {
+  async runSimulation(accountBalanceHistory, changesInBalance) {
     await (this.setState({simulationCounter:this.state.simulationCounter+1}))
-    var simulationVSbalance = await (this.simulate(accountBalanceHistory, changesInBalance, startDate, startMoney));
+    var simulationVSbalance = await (this.simulate(accountBalanceHistory, changesInBalance));
     this.setState({simulationVSbalance})
   }
 
-  async simulate(accountBalanceHistory, changesInBalance, startDate, startMoney) {
-    const { simulationVSbalance, simulationCounter } = this.state;
+  async simulate(accountBalanceHistory, changesInBalance) {
+    const { simulationVSbalance, simulationCounter, startDate, startMoney, commMin, commShare, bidAskSpread, stopLoss } = this.state;
     var ret = [];
 
     try {
@@ -94,10 +106,10 @@ class App extends Component {
       var startDay = startDate;
       var prevSim = startMoney;
       var prevReal = startMoney;
-      var bidAskSpread = 0.0025;
-      var percentOfLossStoplossLimit = -5;
-      var commissionPerShare = 0.01; 
-      var commissionMinimum = 5;
+      var bidAsk_Spread = (bidAskSpread / 2) / 100;
+      var percentOfLossStoplossLimit = stopLoss;
+      var commissionPerShare = commShare; 
+      var commissionMinimum = commMin;
       var commissionFixed = 0;
       ////////////////////////////////////////////////////
       ////////////////////////////////////////////////////
@@ -138,7 +150,7 @@ class App extends Component {
           objRangeReturns[currDay],
           prevSim, 
           changesInBalance,
-          bidAskSpread, 
+          bidAsk_Spread, 
           percentOfLossStoplossLimit, 
           commissionPerShare, 
           commissionMinimum, 
@@ -206,9 +218,15 @@ class App extends Component {
             let dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * 1;
             let dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * -1;
             if (((item.direction === 1) && (dLongPosition_OpenToLow <= percentOfLossStoplossLimit)) ||
-                ((item.direction === -1) && (dShortPosition_OpenToHigh <= percentOfLossStoplossLimit)))
-                
-                change = percentOfLossStoplossLimit;
+                ((item.direction === -1) && (dShortPosition_OpenToHigh <= percentOfLossStoplossLimit))) {
+              
+                  
+              this.str += (change + ";" + percentOfLossStoplossLimit + '\n')
+              change = percentOfLossStoplossLimit;
+            }
+            else {
+              this.str += (change  + '\n')
+            }
           }
         }
 
@@ -260,10 +278,18 @@ class App extends Component {
                 <section id="Balance" className="panel">
                   <div style={{display: 'flex', flexDirection:'column', width:150, backgroundColor: '#da7620'}}>
                     <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
-                      <label htmlFor="startDate">Start Date:</label>
+                      <label htmlFor="startDate" style={{margin:0}}>Start Date:</label>
                       <input type="text" value={this.state.startDate} onChange={e => this.setState({startDate: e.target.value})}/>
-                      <label htmlFor="startDate">Start Amount:</label>
+                      <label htmlFor="startDate" style={{margin:0}}>Start Amount:</label>
                       <input type="text" value={this.state.startMoney} onChange={e => this.setState({startMoney: e.target.value})}/>
+                      <label htmlFor="startDate" style={{margin:0}}>BA Spread:</label>
+                      <input type="text" value={this.state.bidAskSpread} onChange={e => this.setState({bidAskSpread: e.target.value})}/>
+                      <label htmlFor="startDate" style={{margin:0}}>SP:</label>
+                      <input type="text" value={this.state.stopLoss} onChange={e => this.setState({stopLoss: e.target.value})}/>
+                      <label htmlFor="startDate" style={{margin:0}}>Commition (s):</label>
+                      <input type="text" value={this.state.commShare} onChange={e => this.setState({commShare: e.target.value})}/>
+                      <label htmlFor="startDate" style={{margin:0}}>Commition (min):</label>
+                      <input type="text" value={this.state.commMin} onChange={e => this.setState({commMin: e.target.value})}/>
                     </div>
                     <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
                       <button onClick={this.handleDateChange}>Run!</button>
