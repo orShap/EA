@@ -3,7 +3,7 @@ import DatePicker from 'react-datepicker';
 import AmCharts from "@amcharts/amcharts3-react";
 import moment from 'moment';
 
-class TomorrowPositions extends Component {
+class Balance extends Component {
 
   constructor(props) {
     super(props);
@@ -94,24 +94,9 @@ class TomorrowPositions extends Component {
             "valueZoomable":true
         }
     };
-
-
-
-    this.state = {
-      data: [],
-      startDate: moment("2017-04-01"),
-      endDate: moment()
-    };
-    this.handleDateChange = this.handleDateChange.bind(this);
   }
    
-  handleDateChange(start, end) {
-    if (start && start > moment("2017-04-01") && start < this.state.endDate) 
-      this.setState({startDate: start});
-    if (end && end <= moment()) 
-      this.setState({endDate: end});
-  }
-
+  
   componentWillReceiveProps(nextProps) {
     const { data } = nextProps;
     this.refs.amChart.state.chart.dataProvider = data;
@@ -121,13 +106,13 @@ class TomorrowPositions extends Component {
   render() {
     const {style} = this.props;
     return (
-        <div>
-            <DatePicker selected={this.state.startDate} onChange={(d) => this.handleDateChange(d, null)}/>;
-            <DatePicker selected={this.state.endDate} onChange={(d) => this.handleDateChange(null, d)}/>;
-            <AmCharts.React ref="amChart" style={style} options={this.chartConfig}/>
+        <div style={{display: 'flex', flexDirection:'row'}}>
+            <div style={{display: 'flex', width:1000, margin:10,  alignItems: 'center', justifyContent: 'center'}}> 
+                <AmCharts.React ref="amChart" style={{width:1000}} options={this.chartConfig}/>
+            </div> 
         </div>
     );
   }
 }
 
-export default TomorrowPositions;
+export default Balance;

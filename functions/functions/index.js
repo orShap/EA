@@ -1,23 +1,24 @@
 const utils         = require('./utils');
 const utilsWeb      = require('./utilsWeb');
 const utilsStrategy = require('./utilsStrategy');
-const firebase      = require("firebase");
 const functions     = require('firebase-functions');
+const admin         = require('firebase-admin');
 const moment        = require("moment-timezone");
 const rp            = require('request-promise');
 const async         = require('asyncawait/async');
 const await         = require('asyncawait/await');
 const cors          = require('cors');
-firebase.initializeApp({
-    apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
-    authDomain: "shapira-pro.firebaseapp.com",
-    databaseURL: "https://shapira-pro.firebaseio.com",
-    projectId: "shapira-pro",
-    storageBucket: "shapira-pro.appspot.com",
-    messagingSenderId: "813284272810"
-});
+admin.initializeApp();
+//firebase.initializeApp({
+//    apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
+//    authDomain: "shapira-pro.firebaseapp.com",
+//    databaseURL: "https://shapira-pro.firebaseio.com",
+//    projectId: "shapira-pro",
+//    storageBucket: "shapira-pro.appspot.com",
+//    messagingSenderId: "813284272810"
+//});
  
-var database = firebase.database();
+var database = admin.database();
 var cachedSharesData;
 var cachedEarningsCalendar;
 
@@ -52,7 +53,9 @@ var getRangeReturns = async(function(start, end) {
                 let arrInfo = [];
                 let currSymbolsToBuy = symbolsToBuy[curr];
                 let currDateReturn = positionReturns[curr]
-                if (currSymbolsToBuy) {
+                if (currSymbolsToBuy) { 
+                    if (!currDateReturn) 
+                        currDateReturn = await (getDailyReturns(curr)) 
                     Object.keys(currSymbolsToBuy).forEach(k => {
                         let currShare = currSymbolsToBuy[k];
                         if (currShare && currShare.symbol) {
@@ -85,11 +88,13 @@ var getDailyReturns = async(function(date) {
         var keys = Object.keys(symbolsToBuy);
         for (var k = 0; k < keys.length; k++) {
             var currElement = symbolsToBuy[keys[k]];
-            currElement.data = await (getPositionReturns(currElement.symbol, wantedDate, updates))
-            arrInfo.push(currElement);
+            if (currElement.symbol) {
+                currElement.data = await (getPositionReturns(currElement.symbol, wantedDate, updates))
+                arrInfo.push(currElement);
+            }
         }
             
-        database.ref().update(updates);
+        await (database.ref().update(updates));
     }
 
     return arrInfo;
@@ -125,7 +130,7 @@ var getPositionReturns = async(function(symbol, date, updates) {
             else {
                 var updates = {};
                 updates[dbPath] = positionInfo;
-                database.ref().update(updates);
+                await (database.ref().update(updates));
             }
             
             return (positionInfo);
@@ -145,17 +150,16 @@ var predictInvestmentsByDate = async(function(date) {
     var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
 
     // Not a valid time
-    if (!ET.validTimeCheck && !ET.isWeekend) {
+    if (!ET.validTimeCheck) {
         var now = moment.tz('America/New_York');
-        var notActionTime = { message: "Not a time for any action", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm') };
-
-        // Update DB only before decisions time 
-        if ((now.hour() < utils.decisionsTime.hour) || 
-            (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
-            updates[dbPath] = notActionTime;
-            database.ref().update(updates);
+        var notActionTime = { message: "Waiting for end of trading day...", timeET : moment.tz(ET.wantedTimeET, 'America/New_York').format('DD.MM.YYYY HH:mm'), isWeekend: ET.isWeekend};
+        if (!ET.isWeekend) {
+            // Update DB only before decisions time 
+            if ((now.hour() < utils.decisionsTime.hour) || (now.hour() == utils.decisionsTime.hour && now.minute() < utils.decisionsTime.minute)) {
+                updates[dbPath] = notActionTime;
+                await (database.ref().update(updates));
+            }
         }
-
         return (notActionTime);  
     }
     else {
@@ -175,7 +179,7 @@ var predictInvestmentsByDate = async(function(date) {
             arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
             arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
             updates[dbPath] = arrEarningAnnouncements;
-            database.ref().update(updates);
+            await (database.ref().update(updates));
         }
 
         return (arrEarningAnnouncements);
@@ -210,7 +214,7 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
     //});
 
     arrEarningAnnouncements.forEach(element => {if (!element.data) console.error(element.symbol + " didn't get DataLayer - " + wantedDate)});
-    database.ref().update(updates);
+    await (database.ref().update(updates));
     return arrEarningAnnouncements;
 });
 
@@ -345,7 +349,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
         var updates = {};
         updates[dbPath] = arrToReturn;
-        database.ref().update(updates);
+        await (database.ref().update(updates));
         //console.log("Took rlevant calendar from ZACKS-WEB and save it to DB!");
     }
 
@@ -427,34 +431,36 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
     }
 }));
 
-const gcs = require('@google-cloud/storage')();
+const gcs = require('@google-cloud/storage')({keyFilename: './serviceAccount.json'});
 const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
-exports.getPublicURI = functions.storage.object().onChange(async ((event) => {
+exports.getPublicURI = functions.storage.object().onFinalize(async ((object) => {
     
-    if (event.data) {
-        var fileBucket = event.data.bucket;
-        var filePath = event.data.name;
-        //var gcsBucket = gcs.bucket(fileBucket);
+    if (object) {
+        var fileBucket = object.bucket;
+        var filePath = object.name;
         var file = gcsBucket.file(filePath);
         var signedUrls = await (file.getSignedUrl({ action: 'read', expires: '01-01-2400' }));
-        console.log(signedUrls[0]);
-        updates['/eaWebInfo/' +  filePath] = signedUrls[0]
+        var snapshot = await (database.ref('/eaWebInfo/gallery').once('value'));
+        shareData = snapshot.val();
+        shareData = shareData ? shareData : {};
+        updates = {};
+        updates['/eaWebInfo/gallery/' +  Object.keys(shareData).length] = signedUrls[0]
         return database.ref().update(updates);
     }
     return null;
 }));
-exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async (event => {
+exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async ((change, context) => {
     const { withQuantilesCheck, withWindowReturnsCheck, countOfQuantiles, windowSize, minimumPrice, minimumWindowReturn, minimumVolume } = event.params;
     var updates = {};
-    var previous = event.data.previous.val();
-    var current = event.data.val();
+    var previous = change.before.val();
+    var current = change.after.val();
   
-    if (!previous && current) {
+    if (current) {
         updates['/eaWebInfo/todoActions/'] = current
         return database.ref().update(updates);
     }
     return null;
-  }));
+}));
 
 
 

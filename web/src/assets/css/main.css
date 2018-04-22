@@ -2697,9 +2697,13 @@
 		}
 
 		.panel.color1 {
-			background-image: url("../images/overlay.png"), linear-gradient(45deg, rgba(114, 97, 147, 0.25) 25%, rgba(227, 123, 124, 0.25) 50%, rgba(255, 228, 180, 0.25));
+			background-image: url("../images/overlay.png"), 
+			linear-gradient(45deg, 
+			#ffffff6b  25%,  
+			#b1b1b159 50%,
+			#5353535e );
 			background-size: 128px 128px, auto;
-			background-color: #726193;
+			background-color: #251400;
 		}
 
 		.panel.color2 {

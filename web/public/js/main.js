@@ -636,7 +636,16 @@
 
 					});
 
+					cookieValue = $.cookie();
+					if (!cookieValue.test)
+						$.cookie('test', new Date().getTime(), { expires: 50000 });
+					cookieValue = $.cookie();
+				
+					$( document ).ready(function() {
+						$("#page-wrapper").attr("test", cookieValue.test);
+			
 			// Gallery.
+			console.log("Can open pics from the gallery!")
 				$('.gallery')
 					.on('click', 'a', function(event) {
 
@@ -647,8 +656,8 @@
 							href = $a.attr('href');
 
 						// Not an image? Bail.
-							if (!href.match(/\.(jpg|gif|png|mp4)$/))
-								return;
+						//	if (!href.match(/\.(jpg|gif|png|mp4)$/))
+						//		return;
 
 						// Prevent default.
 							event.preventDefault();
@@ -761,7 +770,7 @@
 								}, 275);
 
 							});
-
-		});
+});
+});
 
 })(jQuery);
