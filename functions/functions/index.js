@@ -107,37 +107,37 @@ var getPositionReturns = async(function(symbol, date, updates) {
     // if there are values in db return them! 
     var snapshot = await (database.ref(dbPath).once('value'));
 
-    if (snapshot.exists())
+    if (snapshot.exists()) 
         return (snapshot.val());
-    else {
-        var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, true, false));
-        var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, false, true));
+    
+    var dataStart = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, true, false));
+    var dataEnd = await (utilsWeb.getYahooShareDataBeforeWantedDate(symbol, 1, wantedDate, false, true));
         
-        if (dataStart.length == 1 && dataEnd.length == 1) {
+    if (dataStart.length == 1 && dataEnd.length == 1) {
             
-            var positionInfo = { 
-                positionReturn: (dataEnd[0].close / dataStart[0].close), 
-                open: dataStart[0].close, 
-                close: dataEnd[0].close, 
-                low: dataEnd[0].low,
-                high: dataEnd[0].high,
-                dateOpen : dataStart[0].date, 
-                dateClose : dataEnd[0].date, 
-            };
+        var positionInfo = { 
+            positionReturn: (dataEnd[0].close / dataStart[0].close), 
+            open: dataStart[0].close, 
+            spreadOpen: dataEnd[0].open, 
+            close: dataEnd[0].close, 
+            low: dataEnd[0].low,
+            high: dataEnd[0].high,
+            dateOpen : dataStart[0].date, 
+            dateClose : dataEnd[0].date, 
+        };
 
-            if (updates)
-                updates[dbPath] = positionInfo;
-            else {
-                var updates = {};
-                updates[dbPath] = positionInfo;
-                await (database.ref().update(updates));
-            }
-            
-            return (positionInfo);
+        if (updates)
+            updates[dbPath] = positionInfo;
+        else {
+            var updates = {};
+            updates[dbPath] = positionInfo;
+            await (database.ref().update(updates));
         }
-
-        return ({ positionReturn: 1, close: 1, open: 1 });
+        
+        return (positionInfo);
     }
+
+    return ({ positionReturn: 1, close: 1, open: 1 });
 });
 
 var predictInvestmentsByDate = async(function(date) {
@@ -450,7 +450,7 @@ exports.getPublicURI = functions.storage.object().onFinalize(async ((object) => 
     return null;
 }));
 exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuantilesCheck}/{withWindowReturnsCheck}/{countOfQuantiles}/{windowSize}/{minimumPrice}/{minimumWindowReturn}/{minimumVolume}/{date}').onWrite(async ((change, context) => {
-    const { withQuantilesCheck, withWindowReturnsCheck, countOfQuantiles, windowSize, minimumPrice, minimumWindowReturn, minimumVolume } = event.params;
+    const { withQuantilesCheck, withWindowReturnsCheck, countOfQuantiles, windowSize, minimumPrice, minimumWindowReturn, minimumVolume } = context.params;
     var updates = {};
     var previous = change.before.val();
     var current = change.after.val();

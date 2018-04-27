@@ -113,6 +113,7 @@ class App extends Component {
     const { simulationVSbalance, simulationCounter, startDate, startMoney, commMin, commShare, bidAskSpread, stopLoss } = this.state;
     var ret = [];
     this.str = "";
+    this.str2 = "";
     try {
 
       ////////////////////////////////////////////////////
@@ -223,20 +224,31 @@ class App extends Component {
         let nCountOfShares = 0;
 
         if (item.data) {
-            
-          let dAvragePrice = (item.data.close + item.data.open) / 2;
+          
+          let openPrice = item.data.spreadOpen || item.data.open;
+          let dAvragePrice = (item.data.close + openPrice) / 2;
           let dBidAskSpread = bidAskSpread * dAvragePrice * item.direction;
-          nCountOfShares = Math.round(dPositionsStartValue / item.data.open) + 1;
-          change = (((item.data.close - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * item.direction;
+          nCountOfShares = Math.round(dPositionsStartValue / openPrice) + 1;
+          change = (((item.data.close - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * item.direction;
+
+          this.str2 += (currDay +  ";" + item.data.open + ";" + openPrice + ';' + item.direction + ';' + item.estimate + ';' + item.windowReturn + ';' + item.investmentRatio + '\n')
           if (percentOfLossStoplossLimit !== 0)
           {
             // dBidAskSpread is signed accoarding the direction!!!
-            let dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * 1;
-            let dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (item.data.open + dBidAskSpread)) * 100 - 100) * -1;
-            if (((item.direction === 1) && (dLongPosition_OpenToLow <= percentOfLossStoplossLimit)) ||
+            let dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * 1;
+            let dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * -1;
+            
+            let dLongPosition_OpenToSpreadOpen = !item.data.spreadOpen ? 1000 : (((item.data.spreadOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * 1;
+            let dShortPosition_OpenToSpreadOpen = !item.data.spreadOpen ? 1000 : (((item.data.spreadOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * -1;
+   
+            if (((item.direction === 1) && (dLongPosition_OpenToSpreadOpen <= percentOfLossStoplossLimit)) ||
+                ((item.direction === -1) && (dShortPosition_OpenToSpreadOpen <= percentOfLossStoplossLimit))) {
+              let spreadChange = (item.direction === 1) ? dLongPosition_OpenToSpreadOpen : dShortPosition_OpenToSpreadOpen;
+              this.str += (currDay + ";" + spreadChange + ";" + percentOfLossStoplossLimit + '\n')
+              change = spreadChange;
+            }
+            else if (((item.direction === 1) && (dLongPosition_OpenToLow <= percentOfLossStoplossLimit)) ||
                 ((item.direction === -1) && (dShortPosition_OpenToHigh <= percentOfLossStoplossLimit))) {
-              
-                  
               this.str += (currDay + ";" + change + ";" + percentOfLossStoplossLimit + '\n')
               change = percentOfLossStoplossLimit;
             }
@@ -288,7 +300,7 @@ class App extends Component {
                 </section>
 
                 <section id="TomorrowPositions" className="panel">
-                  <TomorrowPositions style={{width:750, margin:25, marginRight:0}} data={todoActions}/>
+                  <TomorrowPositions style={{width:750, margin:25, marginRight:25, display:'flex', flexDirection: 'column'}} data={todoActions}/>
                 </section>
 
                 <section id="Balance" className="panel">
@@ -307,11 +319,9 @@ class App extends Component {
                       <label htmlFor="startDate" style={{margin:0}}>Commition (min):</label>
                       <input type="text" value={this.state.commMin} onChange={e => this.setState({commMin: e.target.value})}/>
                     </div>
-                    <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
-                      <button onClick={this.handleDateChange}>Run!</button>
-                    </div>
-                    <div className="field half" style={{display: 'flex', flexDirection:'column', alignItems: 'center', margin:10}}>
-                      {Boolean(loading) && <LoadingIndicator segmentWidth={10} segmentLength={20} spacing={10}/>}
+                    <div className="field half" style={{display: 'flex', flex: 1, justifyContent: 'flex-end', flexDirection:'column', alignItems: 'center', margin:25}}>
+                      {Boolean(loading) && <LoadingIndicator segmentWidth={8} segmentLength={8} spacing={10}/>}
+                      <button style={{marginTop:25}} onClick={this.handleDateChange}>Run!</button>
                     </div>
                   </div>           
                   <Balance  style={{width:1000, margin:20, marginRight:50}} data={simulationVSbalance}/>

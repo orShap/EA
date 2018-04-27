@@ -33,9 +33,9 @@ class TomorrowPositions extends Component {
           down.push(e);
       })
 
-      down.forEach(e => clipboard + (e.symbol + ","))
+      down.forEach(e => clipboard += (e.symbol + ","))
       clipboard += '\n';
-      up.forEach(e => clipboard + (e.symbol + ","))
+      up.forEach(e => clipboard += (e.symbol + ","))
     }
 
     this.setState({up, down, clipboard, message: data.message});
@@ -47,26 +47,42 @@ class TomorrowPositions extends Component {
     return (
       <div style={this.props.style}>
         <h1 style={{textAlign:'center', marginBottom:20}}>TOMORROW POSITIONS</h1>
-        <div style={{display:'flex', flex:1 }}>
-          <div style={{display:'flex', flexDirection:'column', flex: 1, marginRight:20}}>
-            <div style={{display:'flex', flexDirection:'row', alignItems: 'center', justifyContent:'center' }}>  
-              <h2 style={{paddingRight: 5}}>LONGS</h2>
-              <Icons.MdTrendingUp style={{fontSize:72}}/>
-            </div>
-            { up.map(e => <div key={e.symbol} style={{display:'flex', flexDirection:'row'}}><div className="icon far fa-circle"/><div style={{paddingLeft: 5}}>{Math.round(e.investmentRatio * 100) + "%    - " + e.symbol}</div></div>) }
-          </div>
-          <div style={{display:'flex', flexDirection:'column', flex: 1, marginRight:20}}>
-            <div style={{display:'flex', flexDirection:'row', alignItems: 'center', justifyContent:'center'  }}>
-              <h2 style={{textAlign:'center', paddingRight: 5}}>SHORTS</h2>
-              <Icons.MdTrendingDown style={{fontSize:72}}/>
-            </div>
-            { down.map(e => <div key={e.symbol} style={{display:'flex', flexDirection:'row'}}><div className="icon far fa-circle"/><div style={{paddingLeft: 5}}>{Math.round(e.investmentRatio * 100) + "%    - " + e.symbol}</div></div>) }
-          </div>
+        <div style={{display:'flex', flex:1 }} className="table-wrapper">
+          <table className="alt">
+            <tbody>
+              <tr>
+                <td>
+                <div style={{display:'flex', alignItems: 'center', justifyContent:'center' }}>
+                    <h2 style={{paddingRight: 5}}>LONGS</h2>
+                    <Icons.MdTrendingUp style={{fontSize:72}}/>
+                  </div>
+                </td>
+                <td>
+                  <div style={{display:'flex', alignItems: 'center', justifyContent:'center' }}>
+                    <h2 style={{paddingRight: 5}}>SHORTS</h2>
+                    <Icons.MdTrendingDown style={{fontSize:72}}/>
+                  </div>
+                </td>
+              </tr>
+              {Boolean(!message) && <tr>
+                <td>
+                  <div style={{display:'flex', flexDirection:'column', flex: 1, marginRight:20}}>
+                    { up.map(e => <div key={e.symbol} style={{display:'flex', flexDirection:'row'}}><div className="icon far fa-circle"/><div style={{paddingLeft: 5}}>{Math.round(e.investmentRatio * 100) + "%    - " + e.symbol}</div></div>) }
+                  </div>
+                </td>
+                <td>
+                  <div style={{display:'flex', flexDirection:'column', flex: 1, marginRight:20}}>
+                    { down.map(e => <div key={e.symbol} style={{display:'flex', flexDirection:'row'}}><div className="icon far fa-circle"/><div style={{paddingLeft: 5}}>{Math.round(e.investmentRatio * 100) + "%    - " + e.symbol}</div></div>) }
+                  </div>
+                </td>
+              </tr>}
+              {Boolean(message) && <h3 style={{color:'#da7620'}}>{message}</h3>}
+            </tbody>
+          </table>
         </div>
 
-        <div style={{marginTop:25, textAlign:'center', alignSelf:'center'}}>
-          {Boolean(message) && <h3 style={{color:'#da7620'}}>{message}</h3>}
-          <button onClick={() => copy(clipboard)}>
+        <div style={{ display:'flex', justifyContent:'center'}}>
+          <button onClick={() => {console.log(clipboard); copy(clipboard)}}>
             Copy To Clipboard
           </button>
         </div>
