@@ -160,18 +160,18 @@ class App extends Component {
       objRangeReturns = await (objRangeReturns.json());
       await (this.setState({loading:false}))
 
-      while (currDay <= tomorrow && counter < 15 && this.state.simulationCounter == simulationCounter) {
+      while (currDay <= tomorrow && counter < 50 && this.state.simulationCounter == simulationCounter) {
 
-        let currSim = await (this.simulateDate(
+        let currSim = prevSim + (await (this.simulateDate(
           currDay,
           objRangeReturns[currDay],
-          prevSim, 
+          startMoney, // startMoney,//prevSim,  //////////////////////////////////////////////////////
           changesInBalance,
           bidAsk_Spread, 
           percentOfLossStoplossLimit, 
           commissionPerShare, 
           commissionMinimum, 
-          commissionFixed));
+          commissionFixed)));
 
         
         let currReal = Boolean(accountBalanceHistory && accountBalanceHistory[currDay]) ? accountBalanceHistory[currDay] : prevReal;
@@ -210,9 +210,9 @@ class App extends Component {
     });
   }
 
-  async simulateDate(currDay, currDayReturns, prevSim, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
+  async simulateDate(currDay, currDayReturns, startigDayAmount, changesInBalance, bidAskSpread, percentOfLossStoplossLimit, commissionPerShare, commissionMinimum, commissionFixed) {
 
-    var money = prevSim;
+    var profitAndLoss = 0;
     if (currDayReturns.length > 0) {
       
       var dSum = 0;
@@ -220,26 +220,35 @@ class App extends Component {
 
         let change = 0;
         let dRatio = item.investmentRatio;
-        let dPositionsStartValue = money * dRatio;
+        dRatio = 1; //////////////////////////////////////////////////////
+        let dPositionsStartValue = startigDayAmount * dRatio;
         let nCountOfShares = 0;
 
         if (item.data) {
           
-          let openPrice = item.data.spreadOpen || item.data.open;
-          let dAvragePrice = (item.data.close + openPrice) / 2;
+          let EarningAnnouncementDayMorningOpen = item.data.spreadOpen || item.data.open;
+          let openPrice = item.data.open;
+          let closePrice = EarningAnnouncementDayMorningOpen;
+          let dAvragePrice = (closePrice + openPrice) / 2;
           let dBidAskSpread = bidAskSpread * dAvragePrice * item.direction;
-          nCountOfShares = Math.round(dPositionsStartValue / openPrice) + 1;
-          change = (((item.data.close - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * item.direction;
+          let noSpread = Math.abs(closePrice - (openPrice - dBidAskSpread)) < dBidAskSpread ||
+                         Math.abs(closePrice - (openPrice + dBidAskSpread)) < dBidAskSpread
+          let continueSpreadIsOk = noSpread ? true : ((EarningAnnouncementDayMorningOpen - item.data.open) * item.direction > 0)
 
-          this.str2 += (currDay +  ";" + item.data.open + ";" + openPrice + ';' + item.direction + ';' + item.estimate + ';' + item.windowReturn + ';' + item.investmentRatio + '\n')
-          if (percentOfLossStoplossLimit !== 0)
+          closePrice = noSpread || continueSpreadIsOk ? item.data.close : closePrice;
+
+          nCountOfShares = Math.round(dPositionsStartValue / openPrice) + 1;
+          change = (((closePrice - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * item.direction;
+
+          this.str2 += (currDay +  ";" + openPrice + ";" + EarningAnnouncementDayMorningOpen + ';' + item.direction + ';' + item.estimate + ';' + item.windowReturn + ';' + item.investmentRatio + '\n')
+          if ((noSpread || continueSpreadIsOk) && percentOfLossStoplossLimit !== 0)
           {
             // dBidAskSpread is signed accoarding the direction!!!
             let dLongPosition_OpenToLow = (((item.data.low - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * 1;
             let dShortPosition_OpenToHigh = (((item.data.high - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * -1;
             
-            let dLongPosition_OpenToSpreadOpen = !item.data.spreadOpen ? 1000 : (((item.data.spreadOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * 1;
-            let dShortPosition_OpenToSpreadOpen = !item.data.spreadOpen ? 1000 : (((item.data.spreadOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * -1;
+            let dLongPosition_OpenToSpreadOpen = (((EarningAnnouncementDayMorningOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * 1;
+            let dShortPosition_OpenToSpreadOpen = (((EarningAnnouncementDayMorningOpen - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * -1;
    
             if (((item.direction === 1) && (dLongPosition_OpenToSpreadOpen <= percentOfLossStoplossLimit)) ||
                 ((item.direction === -1) && (dShortPosition_OpenToSpreadOpen <= percentOfLossStoplossLimit))) {
@@ -263,13 +272,13 @@ class App extends Component {
         dTotalCommition = dTotalCommition < commissionMinimum ? commissionMinimum : dTotalCommition;
         dTotalCommition = commissionFixed !== 0 ? commissionFixed : dTotalCommition;
         var dPL = ((dPositionsStartValue - dTotalCommition) * change) - dTotalCommition;
-        dSum += dPL;
+        dSum += (dPL - dPositionsStartValue);
       });
       
-      money = dSum;
+      profitAndLoss = dSum;
     }
       
-    return money;
+    return profitAndLoss;
   }
 
   render() {
