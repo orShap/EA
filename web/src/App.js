@@ -228,7 +228,7 @@ class App extends Component {
           
           let EarningAnnouncementDayMorningOpen = item.data.spreadOpen || item.data.open;
           let openPrice = item.data.open;
-          let closePrice = EarningAnnouncementDayMorningOpen;
+          let closePrice = item.data.close;
           let dAvragePrice = (closePrice + openPrice) / 2;
           let dBidAskSpread = bidAskSpread * dAvragePrice * item.direction;
           let noSpread = Math.abs(closePrice - (openPrice - dBidAskSpread)) < dBidAskSpread ||
@@ -240,7 +240,7 @@ class App extends Component {
           nCountOfShares = Math.round(dPositionsStartValue / openPrice) + 1;
           change = (((closePrice - dBidAskSpread) / (openPrice + dBidAskSpread)) * 100 - 100) * item.direction;
 
-          this.str2 += (currDay +  ";" + openPrice + ";" + EarningAnnouncementDayMorningOpen + ';' + item.direction + ';' + item.estimate + ';' + item.windowReturn + ';' + item.investmentRatio + '\n')
+          this.str2 += (currDay +  ";" + openPrice + ";" + EarningAnnouncementDayMorningOpen + ';' + closePrice + ';' + item.data.low + ';' + item.data.high + ';' + item.direction + ';' + item.estimate + ';' + item.windowReturn + ';' + item.investmentRatio + '\n')
           if ((noSpread || continueSpreadIsOk) && percentOfLossStoplossLimit !== 0)
           {
             // dBidAskSpread is signed accoarding the direction!!!
