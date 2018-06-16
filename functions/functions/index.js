@@ -8,15 +8,15 @@ const rp            = require('request-promise');
 const async         = require('asyncawait/async');
 const await         = require('asyncawait/await');
 const cors          = require('cors');
-admin.initializeApp();
+admin.initializeApp({
 //firebase.initializeApp({
-//    apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
-//    authDomain: "shapira-pro.firebaseapp.com",
-//    databaseURL: "https://shapira-pro.firebaseio.com",
-//    projectId: "shapira-pro",
-//    storageBucket: "shapira-pro.appspot.com",
-//    messagingSenderId: "813284272810"
-//});
+    apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
+    authDomain: "shapira-pro.firebaseapp.com",
+    databaseURL: "https://shapira-pro.firebaseio.com",
+    projectId: "shapira-pro",
+    storageBucket: "shapira-pro.appspot.com",
+    messagingSenderId: "813284272810"
+});
  
 var database = admin.database();
 var cachedSharesData;
