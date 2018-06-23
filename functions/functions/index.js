@@ -9,13 +9,19 @@ const async         = require('asyncawait/async');
 const await         = require('asyncawait/await');
 const cors          = require('cors');
 admin.initializeApp({
-//firebase.initializeApp({
-    apiKey: "AIzaSyAPxVY9M579OhCfjHPTP834q7w4xPiLLns",
-    authDomain: "shapira-pro.firebaseapp.com",
-    databaseURL: "https://shapira-pro.firebaseio.com",
-    projectId: "shapira-pro",
-    storageBucket: "shapira-pro.appspot.com",
-    messagingSenderId: "813284272810"
+  credential: admin.credential.cert({
+    "type": "service_account",
+    "project_id": "shapira-pro",
+    "private_key_id": "0a537495b4a7ff81d307339a4befea9347b42776",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDBjDp9RRLOBbhn\nywVrNBacII2IW6WfEq71Ue+7XztWtfNE5iJ2ViqPOCgSIM/KJFf/xfb3STIQ+kXe\nLDywtgAmuzsevXI0jGmkrYddaJBGt5U88pGJ7x3fitT8kyaDTVB+mYI3v1WGwl2r\nY56s3MuAKwGaSE83qvgdpf8RZxIiiyZDrzMIZz7jsXQemmm77N2GyHAD2UFoGyC6\nEQ8AgLs1SCuZhZ4eQaIfk3LkyaIxHbeOvf4uzPJb4dDCCVY/UTsYw60gB1sftL+/\naAkYfXA7R5du/hoyTzatp2l120YN3ZL35Kmrdk/qyH9cLJGr4dGC7qAXhV8TEG3l\nVeu89MsnAgMBAAECggEABdzhKkl2jlyuzB+vcSKv/j65ZGrSRrh8Kdyd7gd7Q3jA\nS7mYGNmQ8UThAduSL8XC3KT66Pa3C4icdGRtDWh8WXzM1HUmPOB1lF8LsKqpyo3M\nRkv0WKdKBZF6oV2bvXJ3TVgJ3ijV+f6jpvA3lQ9P75Jd7alIrQXPlwy5ZnLAbxQw\nBmvbDNycak0zREDPqpltGdzi8/sXk8Reh+vgwaFSnSLPGNznszkurTmuQU5Khpqw\nMWlZBtPRIfZ7dOGnI5c871qp9XtXkwDt/DMI7IO28RAPTxzDrAfFH+gfH9lukzbW\nT6TyHZwo27rw6CYMjjKdT7xQhWxlTB/QxCznhxZGsQKBgQD2qz1Az53AhRMV/8/C\nijDcp9tbCmLFfS1se+7bvRuMy5T72mlweTBbHzkMl+PbgPm10a6qB3u3h87jRWNS\nMc8yigUqOZ/RhjccllCdEHullR1IjMloZ5AimumiDv8OV3VbJAIR3S8DaWmK9HOj\nlXn36CwZq0j0Mt/LP8KqI9NruwKBgQDI3o9dQ7bqDsSlOAFJ2xdKQpVkF5SqLckK\n6gCwGlN1En+F7ib9S9INEvrIVUlZvDV+S6OsO4geLWlZryieOY/KHnNyA5YvmLQi\nhl/aRJWx5I2bR5sjRbzQivjpz3/U5t3VgJ/6+jDM6AtcnUuxPanIfF/4jilk4HWJ\nbKvmJRjJhQKBgQC5BnOY1OMo0OkjHFK0Q0IpkcOJg73ZE29qK4Bc1Xn/34lubUOf\n+VebUk1Rs/FX6mPkzVbt9VUIstcuRRMeSXx5FWyQYs8NtFZMnDf1yLJm3vYrQGen\nZ9+HBZpwVD1ffZzq85SV38pvDbf8YicHsozdtwq1anT7r9mMtNQJGXxyFwKBgQC7\nCkqSvLf5MHE5q3G/tOv18RQslKyQ3nti10x2rrzhuazXKFBT8iMQm4i7vHbFwTRK\neuJYQULZXs3HfgujcdQLj9lN5DsX7OhncZqVouGFOV4GpmG2MXzE73MiPF47ABK2\neMP/LrL8SmIyBiHyU4niLrYquy2eSkgIBBH5BrgTBQKBgQCgPArpCZI8sTu0GaW9\nF9P2PowmtbNfIpKA98o/P9arRrgMWNkc0JVpee4gsIaKqzY/IXsMYGgO8VSBA5Cz\nPRmFhW73xVi9v/1YhlAKwKPm4c8mWd5qAnWj/E2GQwC6Yzt0YE/oDF2AlRN3z1XU\nUvVe3Opf/b5CbmhC58kAm/qZ/w==\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-7wreq@shapira-pro.iam.gserviceaccount.com",
+    "client_id": "106617783788084276411",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://accounts.google.com/o/oauth2/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-7wreq%40shapira-pro.iam.gserviceaccount.com"
+  }),
+  databaseURL: "https://shapira-pro.firebaseio.com"
 });
  
 var database = admin.database();
@@ -430,6 +436,16 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
         fbRes.sendStatus(400);
     }
 }));
+exports.getEarningsCalendar = functions.https.onRequest(async ((fbReq, fbRes) => {
+    var { date } = fbReq.body;
+    try {
+        fbRes.send(await(getEarningsCalendar(date)));
+    }
+    catch (err) {
+        console.error(err);
+        fbRes.sendStatus(400);
+    }
+}));
 
 const gcs = require('@google-cloud/storage')({keyFilename: './serviceAccount.json'});
 const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
@@ -569,3 +585,42 @@ app.post('/predictInvestmentsByDate', async ((req, res) => {
 //predictInvestmentsByDate("2017-04-26")
 //getDailyReturns("2017-04-04")
 //predictInvestmentsByDate("2017-08-03")
+
+
+
+
+var aaaaa = async(function(date) {
+
+    var snapshot = await (database.ref('/eaSymbolsToBuy/true/false/20/5/5/10/250000/').once('value'));
+    var snapshota = await (database.ref('/eaPositionsInfo/').once('value'));
+    var eaSymbolsToBuy = snapshot.val();
+    var eaPositionsInfo = snapshota.val();
+    var str = "";
+    Object.keys(eaSymbolsToBuy).forEach(currD => {
+        let cPositionsInfo = eaPositionsInfo[currD];
+        
+        if (cPositionsInfo)
+            Object.keys(eaSymbolsToBuy[currD]).forEach(i => {
+                let e = eaSymbolsToBuy[currD][i];
+                let position = cPositionsInfo[e.symbol]
+                if (position)
+                    str += 
+                    currD + ';' +
+                    e.symbol + ';' +
+                    e.direction + ';' +
+                    e.estimate + ';' +
+                    e.quantile + ';' +
+                    e.windowReturn + ';' +
+                    position.open + ';' +
+                    position.spreadOpen + ';' +
+                    position.high + ';' +
+                    position.low + ';' +
+                    position.close + ';' +
+                    position.positionReturn + '\n';
+
+            });
+    });
+    console.log(str);
+});
+
+aaaaa();

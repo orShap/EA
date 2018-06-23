@@ -166,12 +166,13 @@ module.exports = {
                         let nEndSymbolIndex = currShareLine.indexOf(" ", nSymbolIndex);
                         let symbol = currShareLine.substring(nSymbolIndex, nEndSymbolIndex);
                         let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : 0);
-                        let nStart = currShareLine.indexOf("<div class");
+                        //let nStart = currShareLine.indexOf("<div class");
                         let estimate = -999;
 
-                        if (nStart != -1)
+                        if (true) //(nStart != -1)
                         {
-                            var split = currShareLine.substring(0, nStart).split(',');
+                            //var split = currShareLine.substring(0, nStart).split(',');
+                            var split = currShareLine.split(',');
                             var offset = 0;
 
                             for (var i = 0; i < split.length - 2; i++)
