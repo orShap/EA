@@ -8,7 +8,7 @@ y = pd.DataFrame(data={
 'b': data.b, 
 'c': data.c, 
 'd': data.d, 
-'e': data.e, 
+'e': data.e,  
 'f': data.f })
 x = data.drop(columns=['a','b', 'c','d','e','f'])
 
