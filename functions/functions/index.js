@@ -593,8 +593,10 @@ var aaaaa = async(function(date) {
 
     var snapshot = await (database.ref('/eaSymbolsToBuy/true/false/20/5/5/10/250000/').once('value'));
     var snapshota = await (database.ref('/eaPositionsInfo/').once('value'));
+    var snapshotb = await (database.ref('/eaSharesData/').once('value'));
     var eaSymbolsToBuy = snapshot.val();
     var eaPositionsInfo = snapshota.val();
+    var eaSharesInfo = snapshotb.val();
     var str = "";
     Object.keys(eaSymbolsToBuy).forEach(currD => {
         let cPositionsInfo = eaPositionsInfo[currD];
@@ -602,22 +604,70 @@ var aaaaa = async(function(date) {
         if (cPositionsInfo)
             Object.keys(eaSymbolsToBuy[currD]).forEach(i => {
                 let e = eaSymbolsToBuy[currD][i];
+                let share = eaSharesInfo[e.symbol] || {};
                 let position = cPositionsInfo[e.symbol]
-                if (position)
-                    str += 
-                    currD + ';' +
-                    e.symbol + ';' +
-                    e.direction + ';' +
-                    e.estimate + ';' +
-                    e.quantile + ';' +
-                    e.windowReturn + ';' +
-                    position.open + ';' +
-                    position.spreadOpen + ';' +
-                    position.high + ';' +
-                    position.low + ';' +
-                    position.close + ';' +
-                    position.positionReturn + '\n';
+                let volumes = "";
+                let changes = "";
+                let index = null;
 
+                if (position && share) {
+
+                    let wdate = moment.tz(currD, "America/New_York");
+                    wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
+                    if (wdate.day() == 0) wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
+                    if (wdate.day() == 6) wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
+                    wdate = utils.clearFormatedTZDate(wdate).substring(0,10);;
+                    
+                    Object.keys(share).forEach(si=> { 
+                        if (share[si].date == wdate) 
+                            index = si;
+                    })
+                    if (index != null) {
+                        for (let x = parseInt(index); x < parseInt(index) + 5 && x < Object.keys(share).length; x++) 
+                            volumes += (share[x].volume || "") + ',';
+                        for (let x = parseInt(index); x < parseInt(index) + 4 && x < Object.keys(share).length; x++) 
+                            changes += (share[x].close / share[x].open) + ',' + 
+                                (share[x].open / share[x + 1].close) + ',' + 
+                                (share[x].close / share[x + 1].close) + ',';
+                    }
+                    else 
+                        return null;
+
+                    if (e.estimate == -999)
+                        return null;
+
+                    let a = position.open;
+                    let b = position.spreadOpen;
+                    let c = position.close;
+                    let wr = e.windowReturn;
+                    let lables = "";
+                    if (a<b) lables += '1,0,';
+                    else  lables += '0,1,';
+                    if (b<c) lables += '1,0,';
+                    else  lables += '0,1,';
+                    if (a<c) lables += '1,0,';
+                    else  lables += '0,1,';
+                    if (wr<1) lables += '1,0';
+                    else  lables += '0,1';
+
+                    str += 
+                    //currD + ',' +
+                    //e.symbol + ',' +
+                    //e.direction + ',' +
+                    //e.quantile + ',' +
+                    e.estimate + ',' +
+                    e.windowReturn + ',' +
+                    volumes + 
+                    changes + 
+                    //position.open + ',' +
+                    //position.spreadOpen + ',' +
+                    //position.high + ',' +
+                    //position.low + ',' +
+                    //position.close + ',' +
+                    //position.positionReturn  + ',' +
+                    lables
+                    + '\n';
+                }
             });
     });
     console.log(str);
