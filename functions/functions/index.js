@@ -623,8 +623,9 @@ var aaaaa = async(function(date) {
                             index = si;
                     })
                     if (index != null) {
-                        for (let x = parseInt(index); x < parseInt(index) + 5 && x < Object.keys(share).length; x++) 
-                            volumes += (share[x].volume || "") + ',';
+                        for (let x = parseInt(index); x < parseInt(index) + 4 && x < Object.keys(share).length; x++) 
+                            volumes += (share[x].volume && share[x + 1].volume ? 
+                                        share[x].volume / share[x + 1].volume : "") + ',';
                         for (let x = parseInt(index); x < parseInt(index) + 4 && x < Object.keys(share).length; x++) 
                             changes += (share[x].close / share[x].open) + ',' + 
                                 (share[x].open / share[x + 1].close) + ',' + 
