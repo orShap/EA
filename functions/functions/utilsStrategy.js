@@ -3,30 +3,30 @@ var utils = require('./utils');
 
 module.exports = {
     
-    addInvestmentDataLayer : function(arrEarningAnnouncements) {
+    addInvestmentDataLayer : function(mapEarningAnnouncementsToBuy) {
 
         var windowsReturnInterval = 0;
+        var arrEarningAnnouncements = Object.values(mapEarningAnnouncementsToBuy);
         arrEarningAnnouncements.forEach(curr => { windowsReturnInterval += Math.abs(curr.windowReturn * 100 - 100)});
         arrEarningAnnouncements.forEach(curr => {
             curr.direction = curr.data[0].close > curr.data[curr.data.length - 1].open ? -1 : 1;
             curr.investmentRatio = (Math.abs(curr.windowReturn * 100 - 100) / windowsReturnInterval);
         })
 
-        return arrEarningAnnouncements;
+        return mapEarningAnnouncementsToBuy;
     },
-    minimizeSharesList : function(arrEarningAnnouncements, params) {
+    minimizeSharesList : function(mapEarningAnnouncementsToBuy, params) {
 
         var minimizedVolumeArray = [];
-        var minimizedFinalArray = [];
         
-        arrEarningAnnouncements.forEach(share => {
+        Object.values(mapEarningAnnouncementsToBuy).forEach(share => {
             if (share.data && share.data[0] && share.data[0].volume && share.data[0].volume >= params.minimumVolume) 
                 minimizedVolumeArray.push(share);
             else if (!share.data || !share.data[0] || !share.data[0].volume)
                 console.log("somthing wrong with shares data - " + share.symbol)
         });
 
-        minimizedFinalArray = this.minimizePriceWindowAndQuantiles(
+        var minimizedFinalArray = this.minimizePriceWindowAndQuantiles(
             minimizedVolumeArray, 
             params.withQuantilesCheck, 
             params.withWindowReturnsCheck, 
@@ -35,7 +35,9 @@ module.exports = {
             params.minimumWindowReturn, 
             params.countOfQuantiles);
 
-        return minimizedFinalArray;
+        minimizedFinalMap = {}
+        minimizedFinalArray.forEach(e => minimizedFinalMap[e.symbol] = e);
+        return minimizedFinalMap;
     },
 
 
