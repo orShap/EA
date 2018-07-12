@@ -1,0 +1,39 @@
+node --inspect-brk=8741 functions\functions\index.js 
+Debugger listening on ws://127.0.0.1:8741/c25b5eb3-d3ca-41d9-a6b9-de673d308de0
+Warning, FIREBASE_CONFIG environment variable is missing. Initializing firebase-admin will fail
+2017-07-20: 86 zacks earnings
+2017-07-21: 31 zacks earnings
+No data in YAHOO for - DGI
+No data in YAHOO for - DGI
+No data in YAHOO for - DGI
+somthing wrong with shares data - ASR
+somthing wrong with shares data - DGI
+2017-07-21: 31 zacks earnings
+2017-07-24: 58 zacks earnings
+2017-07-21: 31 zacks earnings
+2017-07-24: 58 zacks earnings
+2017-07-21: 31 zacks earnings
+2017-07-24: 58 zacks earnings
+2017-07-24: 58 zacks earnings
+2017-07-25: 149 zacks earnings
+somthing wrong with shares data - ACC
+somthing wrong with shares data - DGX
+2017-07-25: 149 zacks earnings
+2017-07-26: 222 zacks earnings
+somthing wrong with shares data - AMP
+somthing wrong with shares data - MPX
+somthing wrong with shares data - PB
+somthing wrong with shares data - TMO
+2017-07-26: 222 zacks earnings
+2017-07-27: 348 zacks earnings
+Unhandled rejection Error: Reference.update failed: First argument  contains an invalid key (RDS.A) in property 'eaCalendar.2017-07-27'.  Keys must be non-empty strings and can't contain ".", "#", "$", "/", "[", or "]"
+    at c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\database\dist\index.node.cjs.js:1469:27
+    at Object.forEach (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\util\dist\index.node.cjs.js:835:13)
+    at validateFirebaseData (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\database\dist\index.node.cjs.js:1462:14)
+    at c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\database\dist\index.node.cjs.js:1553:9
+    at Object.forEach (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\util\dist\index.node.cjs.js:835:13)
+    at validateFirebaseMergeDataArg (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\database\dist\index.node.cjs.js:1551:10)
+    at Reference.update (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\@firebase\database\dist\index.node.cjs.js:13989:9)
+    at c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\index.js:392:31
+    at tryBlock (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\asyncawait\src\async\fiberManager.js:39:33)
+    at runInFiber (c:\Users\Or\Projects\EarningsAnnouncements\EA\functions\functions\node_modules\asyncawait\src\async\fiberManager.js:26:9)
