@@ -128,6 +128,8 @@ var getPositionReturns = async(function(symbol, date, updates) {
             close: dataEnd[0].close, 
             low: dataEnd[0].low,
             high: dataEnd[0].high,
+            volumeD0: dataStart[0].volume, 
+            volumeD1: dataEnd[0].volume, 
             dateOpen : dataStart[0].date, 
             dateClose : dataEnd[0].date, 
         };
@@ -153,7 +155,7 @@ var predictInvestmentsByDate = async(function(date) {
     var paramsValues = [];
     for(var key in utils.params) paramsValues.push(utils.params[key]);       
     var paramsPath = paramsValues.join('/');
-    var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET.substring(0,10);
+    var dbPath = '/eaSymbolsToBuy/' + paramsPath + '/' + ET.wantedTimeET;
 
     // Not a valid time
     if (!ET.validTimeCheck) {
@@ -170,33 +172,63 @@ var predictInvestmentsByDate = async(function(date) {
     }
     else {
 
-        var arrEarningAnnouncements = [];
+        var mapEarningAnnouncementsToBuy = {};
 
         // if there are values in db return them! 
         var snapshot = await (database.ref(dbPath).once('value'));
         var earnings = snapshot.val();
 
         if (earnings && !earnings.message)
-            arrEarningAnnouncements = earnings;
+            mapEarningAnnouncementsToBuy = earnings;
         else {
-            arrEarningAnnouncements = await (getEarningsCalendar(ET.wantedTimeET));
-            arrEarningAnnouncements = await (addDataLayer(arrEarningAnnouncements, utils.params.windowSize, ET.wantedTimeET));
-            arrEarningAnnouncements = utilsStrategy.minimizeSharesList(arrEarningAnnouncements, utils.params);
-            arrEarningAnnouncements = utilsStrategy.addInvestmentDataLayer(arrEarningAnnouncements);
-            arrEarningAnnouncements.forEach(element => { if (element.data) delete element.data; });
-            updates[dbPath] = arrEarningAnnouncements;
+            mapEarningAnnouncementsToBuy = await (getEarningsCalendar(ET.wantedTimeET));
+            mapEarningAnnouncementsToBuy = await (addDataLayer(mapEarningAnnouncementsToBuy, utils.params.windowSize, ET.wantedTimeET));
+            mapEarningAnnouncementsToBuy = utilsStrategy.minimizeSharesList(mapEarningAnnouncementsToBuy, utils.params);
+            mapEarningAnnouncementsToBuy = utilsStrategy.addInvestmentDataLayer(mapEarningAnnouncementsToBuy);
+            Object.values(mapEarningAnnouncementsToBuy).forEach(element => { if (element.data) delete element.data; });
+            updates[dbPath] = mapEarningAnnouncementsToBuy;
             await (database.ref().update(updates));
         }
 
-        return (arrEarningAnnouncements);
+        return (mapEarningAnnouncementsToBuy);
     }
 });
 
-var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDate) {
+var getReportedEarnings = async(function(date) {
+
+    var paramsValues = [];
+    for(let key in utils.params) paramsValues.push(utils.params[key]);
+
+    var today = utils.clearFormatedTZDate(moment.tz(new Date(), "America/New_York")).substring(0,10);
+    var tomorrow = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(today, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
+    if (tomorrow.day() == 6) tomorrow = moment.tz(moment(utils.clearFormatedTZDate(tomorrow)) + (60000 * 60 * 25), "America/New_York");
+    if (tomorrow.day() == 0) tomorrow = moment.tz(moment(utils.clearFormatedTZDate(tomorrow)) + (60000 * 60 * 25), "America/New_York");
+    tomorrow = utils.clearFormatedTZDate(tomorrow).substring(0,10);
+
+
+    var todaysEarningsCalendar = await (utilsWeb.getZacksEarningsCalendar(today, null, {}));
+    var updates = {};
+    var pathesMap = {};
+    pathesMap['eaCalendar/' + today + '/'] = 1;
+    pathesMap['eaCalendar/' + tomorrow + '/'] = 1;
+    pathesMap['/eaSymbolsToBuy/' + paramsValues.join('/') + today + '/'] = 1;
+    pathesMap['/eaSymbolsToBuy/' + paramsValues.join('/') + tomorrow + '/'] = 1;
+    Object.keys(pathesMap).forEach(path => {
+        let snapshotVal = (await (database.ref(path).once('value'))).val();
+        Object.keys(todaysEarningsCalendar).forEach(symbol => {
+            if (snapshotVal && snapshotVal[symbol] && todaysEarningsCalendar[symbol].reported != null)
+                updates[path + symbol + '/reported'] = todaysEarningsCalendar[symbol].reported;
+        });
+    })
+    
+    await (database.ref().update(updates));
+});
+
+var addDataLayer = async (function(mapEarningAnnouncementsToBuy, nNumOfDays, wantedDate) {
 
     var updates = {};
     var asyncInChunk = 5;
-
+    var arrEarningAnnouncements = Object.values(mapEarningAnnouncementsToBuy);
     //arrEarningAnnouncements.forEach(element => {
     for (var index = 0; index < arrEarningAnnouncements.length; index+=asyncInChunk) {
         
@@ -221,56 +253,56 @@ var addDataLayer = async (function(arrEarningAnnouncements, nNumOfDays, wantedDa
 
     arrEarningAnnouncements.forEach(element => {if (!element.data) console.error(element.symbol + " didn't get DataLayer - " + wantedDate)});
     await (database.ref().update(updates));
-    return arrEarningAnnouncements;
+    return mapEarningAnnouncementsToBuy;
 });
 
 var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDate, updates) {
 
-    var arrToReturn = [];
+    var mapToReturn = {};
     var dbPath = '/eaSharesData/' + symbol.replace('.','-');
-    var shareData;
+    var arrShareData;
     var retriveDataFromWeb = true;
     var index;
 
     
     if (cachedSharesData) {
-        shareData = cachedSharesData[symbol];
+        arrShareData = cachedSharesData[symbol];
     }
-    if (shareData) {
+    if (arrShareData) {
         //console.log("Had " + symbol + " in Cashe!");
     }
     else {
         var snapshot = await (database.ref(dbPath).once('value'));
-        shareData = snapshot.val();
+        arrShareData = Object.values(snapshot.val() || {});
         cachedSharesData = {};
-        cachedSharesData[symbol] = shareData;
+        cachedSharesData[symbol] = arrShareData;
     }
 
     // If data exists
-    if (!shareData) 
-        shareData = [];
+    if (!arrShareData) 
+        arrShareData = [];
     else {
-
-        shareData.sort((a, b) => { return moment(b.date).diff(moment(a.date)) });
+        arrShareData = arrShareData.sort((a, b) => { return moment(b.date).diff(moment(a.date)) });
 
         // Find the wandetd date index
-        for (index = 0; index < shareData.length; index++) {
-            if (shareData[index].wantedDate && 
-                shareData[index].wantedDate.wantedDate == wantedDate) 
+        for (index = 0; index < arrShareData.length; index++) {
+            if (arrShareData[index].wantedDate && 
+                arrShareData[index].wantedDate.wantedDate == wantedDate) 
                 break;
         }
 
         // If data in DB contains all the transaction request - no need to retrive the data from the web
-        if ((index < shareData.length) &&
-            (shareData[index].wantedDate) &&
-            (shareData[index].wantedDate.wantedDate == wantedDate) && 
-            (shareData[index].wantedDate.plus >= nNumOfDays))
+        if ((index < arrShareData.length) &&
+            (arrShareData[index].wantedDate) &&
+            (arrShareData[index].wantedDate.wantedDate == wantedDate) && 
+            (arrShareData[index].wantedDate.plus >= nNumOfDays))
             retriveDataFromWeb = false;
     }
 
     // If there is no need to retrive the data from the web
     if (!retriveDataFromWeb) {
-        arrToReturn = shareData.slice(index, index + nNumOfDays );
+        let temp = arrShareData.slice(index, index + nNumOfDays );
+        temp.forEach(e => mapToReturn[e.symbol] = e);
         //console.log("Had " + symbol + " relevant dates in DB!");
     }
     else {
@@ -278,35 +310,35 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
 
         // Add the new data
         arrNewData.forEach(element => {
-            shareData.push(element);
+            arrShareData.push(element);
         });
 
         // Sort data by date (from new to old)
-        shareData.sort((a, b) => { return moment(b.date).diff(moment(a.date)) });
+        arrShareData.sort((a, b) => { return moment(b.date).diff(moment(a.date)) });
 
         // Remove all duplicate data
-        for (var removeIndex = shareData.length - 2; removeIndex >= 0; removeIndex--) {
-            if (shareData[removeIndex].date == shareData[removeIndex + 1].date) {
-                var curr = shareData[removeIndex].wantedDate ? shareData[removeIndex].wantedDate.plus : 0;
-                var next = shareData[removeIndex + 1].wantedDate ? shareData[removeIndex + 1].wantedDate.plus : 0;
+        for (var removeIndex = arrShareData.length - 2; removeIndex >= 0; removeIndex--) {
+            if (arrShareData[removeIndex].date == arrShareData[removeIndex + 1].date) {
+                var curr = arrShareData[removeIndex].wantedDate ? arrShareData[removeIndex].wantedDate.plus : 0;
+                var next = arrShareData[removeIndex + 1].wantedDate ? arrShareData[removeIndex + 1].wantedDate.plus : 0;
                 if (curr < next)
-                    shareData[removeIndex] = shareData[removeIndex + 1];
+                    arrShareData[removeIndex] = arrShareData[removeIndex + 1];
                 
-                shareData.splice(removeIndex + 1, 1);
+                arrShareData.splice(removeIndex + 1, 1);
             }
         }
 
-        arrToReturn = shareData;
-        updates[dbPath] = arrToReturn;
+        arrShareData.forEach(e => mapToReturn[e.date] = e);
+        updates[dbPath] = mapToReturn;
         return (arrNewData);
     }
 
-    return arrToReturn;
+    return arrShareData;
 })
 
 var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
-    var arrToReturn = [];
+    var mapToReturn = {};
     var formatedWandedDate = wantedDate.substring(0,10);
     var dbPath = '/eaCalendar/' + formatedWandedDate;
     var snapshot;
@@ -333,7 +365,7 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
     // Check if exists in db
     if (currEarningsCalendar) { 
-        arrToReturn = currEarningsCalendar;
+        mapToReturn = currEarningsCalendar;
     }
     else {
 
@@ -348,18 +380,20 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
         if (dayBefore.day() == 6)
             dayBefore = moment.tz(moment(utils.clearFormatedTZDate(dayBefore)) - (60000 * 60 * 1), "America/New_York");
 
-        sameDay = utils.clearFormatedTZDate(sameDay);
-        dayBefore = utils.clearFormatedTZDate(dayBefore);
-        arrToReturn = await (utilsWeb.getZacksEarningsCalendar(dayBefore, "amc", arrToReturn));
-        arrToReturn = await (utilsWeb.getZacksEarningsCalendar(sameDay, "bmo", arrToReturn));
+        var zacsMapCalendar = {};
+        sameDay = utils.clearFormatedTZDate(sameDay).substring(0,10);
+        dayBefore = utils.clearFormatedTZDate(dayBefore).substring(0,10);
+        zacsMapCalendar = await (utilsWeb.getZacksEarningsCalendar(dayBefore, "amc", zacsMapCalendar));
+        zacsMapCalendar = await (utilsWeb.getZacksEarningsCalendar(sameDay, "bmo", zacsMapCalendar));
+        mapToReturn = zacsMapCalendar
 
         var updates = {};
-        updates[dbPath] = arrToReturn;
+        updates[dbPath] = zacsMapCalendar;
         await (database.ref().update(updates));
         //console.log("Took rlevant calendar from ZACKS-WEB and save it to DB!");
     }
 
-    return arrToReturn;
+    return mapToReturn;
 })
 
 
@@ -436,6 +470,15 @@ exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRe
         fbRes.sendStatus(400);
     }
 }));
+exports.getReportedEarnings = functions.https.onRequest(async ((fbReq, fbRes) => {
+    try {
+        fbRes.send(await(getReportedEarnings()));
+    }
+    catch (err) {
+        console.error(err);
+        fbRes.sendStatus(400);
+    }
+}));
 exports.getEarningsCalendar = functions.https.onRequest(async ((fbReq, fbRes) => {
     var { date } = fbReq.body;
     try {
@@ -491,96 +534,109 @@ exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuan
 
 
 
+var getAllDataBetweenDates = async(function(start, end) {
+    
+    var iter = start;
+    while (iter <= end) {
+        await (predictInvestmentsByDate(iter))
+        iter = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(iter, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
+        iter = utils.clearFormatedTZDate(iter).substring(0,10);
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-var port = process.env.PORT || 8080; 
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-var server = app.listen(port, function () {
-  console.log('EA - listening on port ' + port + '!');
+    await (getRangeReturns(start, end));
 });
-server.setTimeout(600000);
 
-// // git push heroku master
-// // heroku logs -t
-// // herolu restart -a shapira
 
-var ams = 0;
-var ainvocations = 0;
-app.post('/getPositionReturns', async ((req, res) => {
+getAllDataBetweenDates("2017-07-18", "2018-07-11");
 
-    var { date, symbol } = req.body;
-    if (!date || !symbol)
-        res.sendStatus(400);
-    try {
-        var start = (new Date()).getTime();
-        var result = await(getPositionReturns(symbol,date));
-        var end = (new Date()).getTime();
-        ams += (end - start);
-        ainvocations++;
-        var delta = ams / ainvocations;
-        console.log(date + ': getPositionReturns ' + delta + 'ms');
-        res.send(result);
-    }
-    catch (err) {
-        console.error(err);
-        res.sendStatus(400);
-    }
-}));
 
-var bms = 0;
-var binvocations = 0;
-app.post('/predictInvestmentsByDate', async ((req, res) => {
 
-    var { date } = req.body;
-    try {
-        var start = (new Date()).getTime();
-        var result = await(predictInvestmentsByDate(date));
-        var end = (new Date()).getTime();
-        bms += (end - start);
-        binvocations++;
-        var delta = bms / binvocations;
-        console.log(date + ': predictInvestmentsByDate ' + delta + 'ms');
-        res.send(result);
-    }
-    catch (err) {
-        console.error(err);
-        res.sendStatus(400);
-    }
-}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//var express = require('express');
+//var app = express();
+//var bodyParser = require('body-parser');
+//var port = process.env.PORT || 8080; 
+//app.use(bodyParser.json()); // support json encoded bodies
+//app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+//var server = app.listen(port, function () {
+//  console.log('EA - listening on port ' + port + '!');
+//});
+//server.setTimeout(600000);
+//
+//// // git push heroku master
+//// // heroku logs -t
+//// // herolu restart -a shapira
+//
+//var ams = 0;
+//var ainvocations = 0;
+//app.post('/getPositionReturns', async ((req, res) => {
+//
+//    var { date, symbol } = req.body;
+//    if (!date || !symbol)
+//        res.sendStatus(400);
+//    try {
+//        var start = (new Date()).getTime();
+//        var result = await(getPositionReturns(symbol,date));
+//        var end = (new Date()).getTime();
+//        ams += (end - start);
+//        ainvocations++;
+//        var delta = ams / ainvocations;
+//        console.log(date + ': getPositionReturns ' + delta + 'ms');
+//        res.send(result);
+//    }
+//    catch (err) {
+//        console.error(err);
+//        res.sendStatus(400);
+//    }
+//}));
+//
+//var bms = 0;
+//var binvocations = 0;
+//app.post('/predictInvestmentsByDate', async ((req, res) => {
+//
+//    var { date } = req.body;
+//    try {
+//        var start = (new Date()).getTime();
+//        var result = await(predictInvestmentsByDate(date));
+//        var end = (new Date()).getTime();
+//        bms += (end - start);
+//        binvocations++;
+//        var delta = bms / binvocations;
+//        console.log(date + ': predictInvestmentsByDate ' + delta + 'ms');
+//        res.send(result);
+//    }
+//    catch (err) {
+//        console.error(err);
+//        res.sendStatus(400);
+//    }
+//}));
 
 //predictInvestmentsByDate("2017-04-26")
 //getDailyReturns("2017-04-04")
@@ -616,7 +672,7 @@ var aaaaa = async(function(date) {
                     wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
                     if (wdate.day() == 0) wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
                     if (wdate.day() == 6) wdate = moment.tz(moment(utils.clearFormatedTZDate(wdate)) - (60000 * 60 * 1), "America/New_York");
-                    wdate = utils.clearFormatedTZDate(wdate).substring(0,10);;
+                    wdate = utils.clearFormatedTZDate(wdate).substring(0,10);
                     
                     Object.keys(share).forEach(si=> { 
                         if (share[si].date == wdate) 
@@ -674,4 +730,6 @@ var aaaaa = async(function(date) {
     console.log(str);
 });
 
-aaaaa();
+
+//aaaaa();
+//getReportedEarnings();

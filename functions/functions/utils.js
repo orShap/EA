@@ -42,7 +42,7 @@ module.exports = {
             wantedTimeET = this.clearFormatedTZDate(moment.tz(moment(timeCheckET) + (60000 * 60 * 25), "America/New_York"));
         }
         
-        return ({ wantedTimeET, validTimeCheck, isWeekend });
+        return ({ wantedTimeET: wantedTimeET.substring(0,10), validTimeCheck, isWeekend });
         
         
     },

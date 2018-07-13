@@ -131,12 +131,9 @@ module.exports = {
         return arrToReturn;
     }),
 
-    getZacksEarningsCalendar : async (function(selectedDate, indicator, arrToReturn) {
+    getZacksEarningsCalendar : async (function(selectedDate, indicator, mapToReturn) {
 
-        var containsSymbolsMap = {};
-        arrToReturn.forEach(element => containsSymbolsMap[element.symbol] = 1);
         var startDate = moment.tz("1970-01-01", "America/New_York");
-
         var trys = 3;
         var trysExceptions = 0;
         var wasException = true;
@@ -155,40 +152,50 @@ module.exports = {
                     }, 
                     body: JSON.stringify({url})}));
 
-                var lines = html.split('[');
-                //console.log(selectedDate.substring(0,10) + ": " + (lines.length - 2) + " zacks earnings");
+                let lines = html.split('[');
+                console.log(selectedDate + ": " + (lines.length) + " zacks earnings");
                 lines.forEach(currShareLine => {
 
-                    var nStartIndex = currShareLine.indexOf("alt=\\\"");
+                    let nStartIndex = currShareLine.indexOf("alt=\\\"");
                     if (nStartIndex != -1) {
 
                         let nSymbolIndex = nStartIndex + "alt=\\\"".length;
                         let nEndSymbolIndex = currShareLine.indexOf(" ", nSymbolIndex);
                         let symbol = currShareLine.substring(nSymbolIndex, nEndSymbolIndex);
-                        let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : 0);
-                        //let nStart = currShareLine.indexOf("<div class");
-                        let estimate = -999;
+                        let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : 
+                                     (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : -1);
 
-                        if (true) //(nStart != -1)
-                        {
-                            //var split = currShareLine.substring(0, nStart).split(',');
-                            var split = currShareLine.split(',');
-                            var offset = 0;
+                        let estimate = null;
+                        let reported = null;
 
-                            for (var i = 0; i < split.length - 2; i++)
-                                offset += split[i].replace(" ", "").startsWith("\"") ? 0 : 1;
+                        let split = currShareLine.split(',');
+                        let offset = 0;
 
-                            var strEstimate = split[4 + offset].substring(2);
+                        for (let i = 0; i < split.length - 2; i++)
+                            offset += split[i].replace(" ", "").startsWith("\"") ? 0 : 1;
+
+                        try {
+                            let strEstimate = split[4 + offset].substring(2);
                             strEstimate = strEstimate.substring(0, strEstimate.length - 1);
                             estimate = parseFloat(strEstimate);
                             if (estimate == undefined || (estimate != 0 && !estimate) || isNaN(estimate))
-                                estimate = -999;
+                                estimate = null;
+
+                            let strReported = split[5 + offset].substring(2);
+                            strReported = strReported.substring(0, strReported.length - 1);
+                            reported = parseFloat(strReported);
+                            if (reported == undefined || (reported != 0 && !reported) || isNaN(reported))
+                                reported = null;
+                        }
+                        catch (e) {
+                            console.error(e);
                         }
 
-                        if (!containsSymbolsMap[symbol]) {
+                        if (!mapToReturn[symbol]) {
                             if ((nOffset == 1 && indicator == "amc") ||
-                                (nOffset == 0 && indicator == "bmo"))
-                                arrToReturn.push({symbol, estimate});
+                                (nOffset == 0 && indicator == "bmo") ||
+                                (nOffset != -1 && !indicator))
+                                mapToReturn[symbol] = {symbol, estimate, reported};
                         }
                     }
                 });
@@ -202,6 +209,6 @@ module.exports = {
             }
         }
 
-        return arrToReturn;
+        return mapToReturn;
     })
 }
