@@ -6,7 +6,8 @@ module.exports = {
     addInvestmentDataLayer : function(mapEarningAnnouncementsToBuy) {
 
         var windowsReturnInterval = 0;
-        var arrEarningAnnouncements = Object.values(mapEarningAnnouncementsToBuy);
+        var arrEarningAnnouncements = []
+        Object.keys(mapEarningAnnouncementsToBuy).forEach(k => arrEarningAnnouncements.push(mapEarningAnnouncementsToBuy[k]));
         arrEarningAnnouncements.forEach(curr => { windowsReturnInterval += Math.abs(curr.windowReturn * 100 - 100)});
         arrEarningAnnouncements.forEach(curr => {
             curr.direction = curr.data[0].close > curr.data[curr.data.length - 1].open ? -1 : 1;
@@ -19,7 +20,8 @@ module.exports = {
 
         var minimizedVolumeArray = [];
         
-        Object.values(mapEarningAnnouncementsToBuy).forEach(share => {
+        Object.keys(mapEarningAnnouncementsToBuy).forEach(k => {
+            let share = mapEarningAnnouncementsToBuy[k];
             if (share.data && share.data[0] && share.data[0].volume && share.data[0].volume >= params.minimumVolume) 
                 minimizedVolumeArray.push(share);
             else if (!share.data || !share.data[0] || !share.data[0].volume)

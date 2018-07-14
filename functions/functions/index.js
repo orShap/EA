@@ -65,7 +65,7 @@ var getRangeReturns = async(function(start, end) {
                     Object.keys(currSymbolsToBuy).forEach(k => {
                         let currShare = currSymbolsToBuy[k];
                         if (currShare && currShare.symbol) {
-                            currShare.data = currDateReturn[currShare.symbol.replace('.','-')];
+                            currShare.data = currDateReturn[currShare.symbol];
                             arrInfo.push(currShare);
                         }
                     });
@@ -108,7 +108,7 @@ var getDailyReturns = async(function(date) {
 
 var getPositionReturns = async(function(symbol, date, updates) {
     var wantedDate = utils.clearFormatedTZDate(moment.tz(date, "America/New_York")).substring(0,10);
-    var dbPath = '/eaPositionsInfo/' + wantedDate + '/' + symbol.replace('.','-');
+    var dbPath = '/eaPositionsInfo/' + wantedDate + '/' + symbol;
     
     // if there are values in db return them! 
     var snapshot = await (database.ref(dbPath).once('value'));
@@ -185,11 +185,12 @@ var predictInvestmentsByDate = async(function(date) {
             mapEarningAnnouncementsToBuy = await (addDataLayer(mapEarningAnnouncementsToBuy, utils.params.windowSize, ET.wantedTimeET));
             mapEarningAnnouncementsToBuy = utilsStrategy.minimizeSharesList(mapEarningAnnouncementsToBuy, utils.params);
             mapEarningAnnouncementsToBuy = utilsStrategy.addInvestmentDataLayer(mapEarningAnnouncementsToBuy);
-            Object.values(mapEarningAnnouncementsToBuy).forEach(element => { if (element.data) delete element.data; });
+            Object.keys(mapEarningAnnouncementsToBuy).forEach(k => { if (mapEarningAnnouncementsToBuy[k].data) delete mapEarningAnnouncementsToBuy[k].data; });
             updates[dbPath] = mapEarningAnnouncementsToBuy;
             await (database.ref().update(updates));
         }
 
+        console.log("FINISH PREDICT!")
         return (mapEarningAnnouncementsToBuy);
     }
 });
@@ -228,7 +229,8 @@ var addDataLayer = async (function(mapEarningAnnouncementsToBuy, nNumOfDays, wan
 
     var updates = {};
     var asyncInChunk = 5;
-    var arrEarningAnnouncements = Object.values(mapEarningAnnouncementsToBuy);
+    var arrEarningAnnouncements = [];
+    Object.keys(mapEarningAnnouncementsToBuy).forEach(k => arrEarningAnnouncements.push(mapEarningAnnouncementsToBuy[k]));
     //arrEarningAnnouncements.forEach(element => {
     for (var index = 0; index < arrEarningAnnouncements.length; index+=asyncInChunk) {
         
@@ -259,7 +261,7 @@ var addDataLayer = async (function(mapEarningAnnouncementsToBuy, nNumOfDays, wan
 var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDate, updates) {
 
     var mapToReturn = {};
-    var dbPath = '/eaSharesData/' + symbol.replace('.','-');
+    var dbPath = '/eaSharesData/' + symbol;
     var arrShareData;
     var retriveDataFromWeb = true;
     var index;
@@ -273,7 +275,9 @@ var getShareDataBeforeWantedDate = async (function(symbol, nNumOfDays, wantedDat
     }
     else {
         var snapshot = await (database.ref(dbPath).once('value'));
-        arrShareData = Object.values(snapshot.val() || {});
+        arrShareData = [];
+        shareDataMap = snapshot.val() || {};
+        Object.keys(shareDataMap).forEach(k => arrShareData.push(shareDataMap[k]));
         cachedSharesData = {};
         cachedSharesData[symbol] = arrShareData;
     }
@@ -538,9 +542,21 @@ var getAllDataBetweenDates = async(function(start, end) {
     
     var iter = start;
     while (iter <= end) {
-        await (predictInvestmentsByDate(iter))
-        iter = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(iter, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
-        iter = utils.clearFormatedTZDate(iter).substring(0,10);
+        try {
+            var html = await (rp({
+                url : 'https://us-central1-shapira-pro.cloudfunctions.net/predictInvestmentsByDate', 
+                method: 'POST',  
+                headers: { 'Content-Type' : 'application/json', 'Accept' : 'application/json' }, 
+                body: JSON.stringify({date : iter})}));
+            //await (predictInvestmentsByDate("2017-07-27"))
+            console.log("FINISH DATE - " + iter)
+            iter = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(iter, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
+            iter = utils.clearFormatedTZDate(iter).substring(0,10);
+        }
+        catch (e) {
+            console.error("error - " + iter)
+            console.error(e);
+        }
     }
 
     await (getRangeReturns(start, end));

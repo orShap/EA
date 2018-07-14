@@ -9,6 +9,7 @@ module.exports = {
     
     getYahooShareDataBeforeWantedDate : async (function(symbol, nNumOfDays, wantedDate, firstDayLessThan, firstDayGreaterOrEqual) {
 
+        symbol = symbol.replace(/,/g, '.');
         const url = "https://finance.yahoo.com/quote/" + symbol + "/history?"
         var arrToReturn = [];
         var trys = 3;
@@ -164,6 +165,7 @@ module.exports = {
                         let symbol = currShareLine.substring(nSymbolIndex, nEndSymbolIndex);
                         let nOffset = currShareLine.indexOf("\"amc\"") != -1 ? 1 : 
                                      (currShareLine.indexOf("\"bmo\"") != -1 ? 0 : -1);
+                        symbol = symbol.replace(/\./g, ',');
 
                         let estimate = null;
                         let reported = null;
