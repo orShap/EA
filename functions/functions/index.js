@@ -538,32 +538,34 @@ exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuan
 
 
 
-var getAllDataBetweenDates = async(function(start, end) {
-    
-    var iter = start;
-    while (iter <= end) {
-        try {
-            var html = await (rp({
-                url : 'https://us-central1-shapira-pro.cloudfunctions.net/predictInvestmentsByDate', 
-                method: 'POST',  
-                headers: { 'Content-Type' : 'application/json', 'Accept' : 'application/json' }, 
-                body: JSON.stringify({date : iter})}));
-            //await (predictInvestmentsByDate("2017-07-27"))
-            console.log("FINISH DATE - " + iter)
-            iter = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(iter, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
-            iter = utils.clearFormatedTZDate(iter).substring(0,10);
-        }
-        catch (e) {
-            console.error("error - " + iter)
-            console.error(e);
-        }
-    }
+//var getAllDataBetweenDates = async(function(start, end) {
+//    
+//    var iter = start;
+//    while (iter <= end) {
+//        try {
+//            var html = await (rp({
+//                url : 'https://us-central1-shapira-pro.cloudfunctions.net/predictInvestmentsByDate', 
+//                method: 'POST',  
+//                headers: { 'Content-Type' : 'application/json', 'Accept' : 'application/json' }, 
+//                body: JSON.stringify({date : iter})}));
+//            //await (predictInvestmentsByDate("2017-07-27"))
+//            await (getDailyReturns(iter));
+//            console.log("FINISH DATE - " + iter)
+//            iter = moment.tz(moment(utils.clearFormatedTZDate(moment.tz(iter, "America/New_York"))) + (60000 * 60 * 25), "America/New_York");
+//            iter = utils.clearFormatedTZDate(iter).substring(0,10);
+//        }
+//        catch (e) {
+//            console.error("error - " + iter)
+//            console.error(e);
+//        }
+//    }
+//
+//    await (getRangeReturns(start, end));
+//});
 
-    await (getRangeReturns(start, end));
-});
 
-
-getAllDataBetweenDates("2017-07-18", "2018-07-11");
+//getAllDataBetweenDates("2017-07-29", "2018-07-21");
+//getRangeReturns("2017-07-18", "2018-07-21");
 
 
 
