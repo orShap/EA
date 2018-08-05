@@ -225,6 +225,7 @@ var getReportedEarnings = async(function(date) {
     await (database.ref().update(updates));
 });
 
+getReportedEarnings();
 var addDataLayer = async (function(mapEarningAnnouncementsToBuy, nNumOfDays, wantedDate) {
 
     var updates = {};
@@ -499,7 +500,6 @@ const gcsBucket = gcs.bucket('shapira-pro.appspot.com');
 exports.getPublicURI = functions.storage.object().onFinalize(async ((object) => {
     
     if (object) {
-        var fileBucket = object.bucket;
         var filePath = object.name;
         var file = gcsBucket.file(filePath);
         var signedUrls = await (file.getSignedUrl({ action: 'read', expires: '01-01-2400' }));
@@ -565,7 +565,7 @@ exports.symbolsToBuyListener = functions.database.ref('/eaSymbolsToBuy/{withQuan
 
 
 //getAllDataBetweenDates("2017-07-29", "2018-07-21");
-//getRangeReturns("2017-07-18", "2018-07-21");
+getRangeReturns("2018-07-18", "2018-08-01");
 
 
 

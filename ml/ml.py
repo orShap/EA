@@ -41,6 +41,6 @@ predictions = classifier.predict(x_test) # predict
 print("Accuracy = ",accuracy_score(y_test,predictions)) # accuracy
 print("\n")
 
-print(y_test)
-print(predictions)
+#print(y_test)
+#print(predictions)
 
