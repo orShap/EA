@@ -400,86 +400,84 @@ var getEarningsCalendar = async (function(wantedDate, isBatch) {
 
 
 var getRangeReturnsFN = async (function(fbReq, fbRes) {
-		const { start, end } = fbReq.body;
-		if (!start || !end || start > end)
-				fbRes.sendStatus(400);
+	const { start, end } = fbReq.body;
+	if (!start || !end || start > end)
+		fbRes.sendStatus(400);
 
-		try {
-				fbRes.send(await(getRangeReturns(start, end)));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	try {
+		fbRes.send(await(getRangeReturns(start, end)));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 });
-var getDailyReturnsFn = async (function(fbReq, fbRes) {
-		
-		const { date } = fbReq.body;
-		if (!date)
-				fbRes.sendStatus(400);
+var getDailyReturnsFn = async (function(fbReq, fbRes) {		
+	const { date } = fbReq.body;
+	if (!date)
+		fbRes.sendStatus(400);
 
-		try {
-				fbRes.send(await(getDailyReturns(date)));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	try {
+		fbRes.send(await(getDailyReturns(date)));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 });
 exports.getRangeReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
-		var corsFn = cors({origin: true});
-		corsFn(fbReq, fbRes, function() {
-				getRangeReturnsFN(fbReq, fbRes);
-		});
+	var corsFn = cors({origin: true});
+	corsFn(fbReq, fbRes, function() {
+		getRangeReturnsFN(fbReq, fbRes);
+	});
 }));
 exports.getDailyReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
-		var corsFn = cors({origin: true});
-		corsFn(fbReq, fbRes, function() {
-				getDailyReturnsFn(fbReq, fbRes);
-		});
+	var corsFn = cors({origin: true});
+	corsFn(fbReq, fbRes, function() {
+		getDailyReturnsFn(fbReq, fbRes);
+	});
 }));
 exports.getPositionReturns = functions.https.onRequest(async ((fbReq, fbRes) => {
+	var { date, symbol } = fbReq.body;
+	if (!date || !symbol)
+		res.sendStatus(400);
 
-		var { date, symbol } = fbReq.body;
-		if (!date || !symbol)
-				res.sendStatus(400);
-
-		try {
-				fbRes.send(await(getPositionReturns(symbol,date)));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	try {
+		fbRes.send(await(getPositionReturns(symbol,date)));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 }));
 exports.predictInvestmentsByDate = functions.https.onRequest(async ((fbReq, fbRes) => {
-		var { date } = fbReq.body;
-		try {
-				fbRes.send(await(predictInvestmentsByDate(date)));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	var { date } = fbReq.body;
+	try {
+		fbRes.send(await(predictInvestmentsByDate(date)));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 }));
 exports.getReportedEarnings = functions.https.onRequest(async ((fbReq, fbRes) => {
-		try {
-				fbRes.send(await(getReportedEarnings()));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	try {
+		fbRes.send(await(getReportedEarnings()));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 }));
 exports.getEarningsCalendar = functions.https.onRequest(async ((fbReq, fbRes) => {
-		var { date } = fbReq.body;
-		try {
-				fbRes.send(await(getEarningsCalendar(date)));
-		}
-		catch (err) {
-				console.error(err);
-				fbRes.sendStatus(400);
-		}
+	var { date } = fbReq.body;
+	try {
+		fbRes.send(await(getEarningsCalendar(date)));
+	}
+	catch (err) {
+		console.error(err);
+		fbRes.sendStatus(400);
+	}
 }));
 
 const gcs = require('@google-cloud/storage')({keyFilename: './serviceAccount.json'});
