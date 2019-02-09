@@ -8,3 +8,5 @@ pip install scikit-learn
 pip install scipy
 pip install scikit-multilearn
 pip install future
+
+or python -m pip install ....
