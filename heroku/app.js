@@ -23,7 +23,7 @@ app.post('/getProxy', async ((req, res) => {
         res.send(html);
     }
     catch (err) {
-        console.error(err);
+        console.error(err); // err.message
         res.sendStatus(400);
     }
 }));
